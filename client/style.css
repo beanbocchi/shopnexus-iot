@@ -1,0 +1,10 @@
+body {
+	font-family: "Inter", sans-serif;
+}
+/* Custom styles for range inputs and visualizer bars */
+.bar {
+	transition: height 0.05s;
+}
+#recordCanvas {
+	display: none;
+}

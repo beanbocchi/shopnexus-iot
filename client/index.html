@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ESP32-CAM Raw TCP Stream</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body class="bg-[#0a0e1a] text-[#e0e6f0] h-screen p-3">
+		<div class="max-w-[1200px] mx-auto">
+			<div class="flex gap-4 flex-col">
+				<div class="flex flex-row w-full gap-x-4">
+					<!-- Camera -->
+					<div
+						class="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5 grow"
+					>
+						<h2
+							class="text-[15px] mb-2.5 text-blue-400 flex items-center gap-2"
+						>
+							📷 Live Feed
+						</h2>
+						<div class="w-full bg-black rounded-xl overflow-hidden relative">
+							<img
+								id="cam"
+								src=""
+								alt=""
+								class="w-full max-h-[45vh] object-contain block"
+							/>
+							<div
+								class="absolute bottom-2.5 left-2.5 bg-black/60 px-2 py-1 rounded text-[11px] font-mono"
+							>
+								FPS: <span id="fps">0</span> | Size: <span id="size">0</span> KB
+								<span id="recIndicator" class="ml-2 text-red-500 hidden"
+									>● REC</span
+								>
+							</div>
+						</div>
+
+						<!-- Recording Controls -->
+						<div class="mt-[15px] flex gap-2.5">
+							<button
+								id="btnRecord"
+								class="px-4 py-2 rounded-lg border-none bg-red-600 text-white font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								🔴 Start Recording
+							</button>
+							<button
+								id="btnStopRecord"
+								class="px-4 py-2 rounded-lg border-none bg-gray-600 text-white font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+								disabled
+							>
+								⏹️ Stop Recording
+							</button>
+							<div
+								class="flex-1 text-right text-xs text-gray-400 flex items-center justify-end"
+							>
+								<span id="recTime" class="hidden"
+									>Duration: <span id="recDuration">00:00</span></span
+								>
+							</div>
+						</div>
+
+						<!-- Controls -->
+						<div class="mt-[15px] flex gap-2.5 flex-wrap">
+							<div class="flex-1 min-w-[120px]">
+								<label class="text-xs text-gray-400 block mb-1"
+									>Quality (10-63)</label
+								>
+								<input
+									type="range"
+									id="quality"
+									min="10"
+									max="63"
+									value="20"
+									class="w-full"
+								/>
+								<div class="text-right text-[11px] mt-0.5" id="qVal">20</div>
+							</div>
+							<div class="flex-1 min-w-[120px]">
+								<label class="text-xs text-gray-400 block mb-1"
+									>Resolution</label
+								>
+								<select
+									id="framesize"
+									class="w-full px-1.5 py-1.5 bg-white/10 text-red-500 border border-white/20 rounded-md"
+								>
+									<option value="13">UXGA (1600x1200)</option>
+									<option value="12">SXGA (1280x1024)</option>
+									<option value="11">HD (1280x720)</option>
+									<option value="10">XGA (1024x768)</option>
+									<option value="9">SVGA (800x600)</option>
+									<option value="8">VGA (640x480)</option>
+									<option value="6">CIF (400x296)</option>
+									<option value="5" selected>QVGA (320x240)</option>
+									<option value="4">HQVGA (240x176)</option>
+									<option value="3">QQVGA (160x120)</option>
+								</select>
+							</div>
+						</div>
+					</div>
+
+					<!-- Audio -->
+					<div
+						class="justify-center bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5"
+					>
+						<h2
+							class="text-[15px] mb-2.5 text-blue-400 flex items-center gap-2"
+						>
+							🎙️ Audio Stream
+						</h2>
+						<div
+							class="flex items-end justify-center h-10 gap-0.5 mt-2.5"
+							id="viz"
+						></div>
+						<button
+							id="btnAudio"
+							class="w-full px-3 py-3 rounded-lg border-none bg-green-500 text-white font-semibold cursor-pointer mt-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							Start Audio
+						</button>
+					</div>
+				</div>
+
+				<!-- Debug Controls -->
+				<div
+					class="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5 col-span-2"
+				>
+					<h2 class="text-[15px] mb-2.5 text-blue-400 flex items-center gap-2">
+						🔧 Debug Controls (OV5640)
+					</h2>
+					<div
+						class="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2"
+					>
+						<!-- XCLK Frequency -->
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<label class="text-[11px] text-gray-400 block mb-1"
+								>XCLK Frequency</label
+							>
+							<select
+								data-id="20"
+								class="debug-select w-full px-1.5 py-1.5 bg-white/10 text-red border border-white/20 rounded-md"
+							>
+								<option value="0">6 MHz</option>
+								<option value="1">8 MHz</option>
+								<option value="2">12 MHz</option>
+								<option value="3" selected>16 MHz</option>
+								<option value="4">24 MHz</option>
+							</select>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<label class="text-[11px] text-gray-400 block mb-1"
+								>Frame Buffers</label
+							>
+							<select
+								data-id="21"
+								class="debug-select w-full px-1.5 py-1.5 bg-white/10 text-[#e0e6f0] border border-white/20 rounded-md"
+							>
+								<option value="1">1 (no pipeline)</option>
+								<option value="2" selected>2 (double buffer)</option>
+								<option value="3">3 (triple buffer)</option>
+								<option value="4">4 (max)</option>
+							</select>
+						</div>
+
+						<!-- Sliders -->
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<label class="text-[11px] text-gray-400 block mb-1"
+								>Brightness (-2 ~ 2)</label
+							>
+							<input
+								type="range"
+								min="-2"
+								max="2"
+								value="0"
+								data-id="3"
+								class="w-full"
+							/>
+							<div class="text-[11px] text-right text-blue-400 font-mono">
+								0
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<label class="text-[11px] text-gray-400 block mb-1"
+								>Contrast (-2 ~ 2)</label
+							>
+							<input
+								type="range"
+								min="-2"
+								max="2"
+								value="0"
+								data-id="4"
+								class="w-full"
+							/>
+							<div class="text-[11px] text-right text-blue-400 font-mono">
+								0
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<label class="text-[11px] text-gray-400 block mb-1"
+								>Saturation (-2 ~ 2)</label
+							>
+							<input
+								type="range"
+								min="-2"
+								max="2"
+								value="0"
+								data-id="5"
+								class="w-full"
+							/>
+							<div class="text-[11px] text-right text-blue-400 font-mono">
+								0
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<label class="text-[11px] text-gray-400 block mb-1"
+								>AE Level (-2 ~ 2)</label
+							>
+							<input
+								type="range"
+								min="-2"
+								max="2"
+								value="0"
+								data-id="10"
+								class="w-full"
+							/>
+							<div class="text-[11px] text-right text-blue-400 font-mono">
+								0
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<label class="text-[11px] text-gray-400 block mb-1"
+								>Gain Ceiling (0~6)</label
+							>
+							<input
+								type="range"
+								min="0"
+								max="6"
+								value="0"
+								data-id="11"
+								class="w-full"
+							/>
+							<div class="text-[11px] text-right text-blue-400 font-mono">
+								0
+							</div>
+						</div>
+
+						<!-- Toggles -->
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400"
+									>AWB (Auto White Balance)</label
+								>
+								<input
+									type="checkbox"
+									checked
+									data-id="6"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400"
+									>AEC (Auto Exposure)</label
+								>
+								<input
+									type="checkbox"
+									checked
+									data-id="7"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400">AGC (Auto Gain)</label>
+								<input
+									type="checkbox"
+									checked
+									data-id="8"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400">AEC2 (Extended)</label>
+								<input
+									type="checkbox"
+									checked
+									data-id="9"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400">BPC</label>
+								<input
+									type="checkbox"
+									checked
+									data-id="12"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400">WPC</label>
+								<input
+									type="checkbox"
+									checked
+									data-id="13"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400">Raw GMA</label>
+								<input
+									type="checkbox"
+									checked
+									data-id="14"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400">Lens Correction</label>
+								<input
+									type="checkbox"
+									checked
+									data-id="15"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400">DCW (Downsize)</label>
+								<input
+									type="checkbox"
+									checked
+									data-id="18"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400">H-Mirror</label>
+								<input
+									type="checkbox"
+									data-id="16"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400">V-Flip</label>
+								<input
+									type="checkbox"
+									data-id="17"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+						<div class="bg-white/[0.04] rounded-md p-1.5 px-2">
+							<div class="flex items-center justify-between">
+								<label class="text-[11px] text-gray-400"
+									>Color Bar (Test)</label
+								>
+								<input
+									type="checkbox"
+									data-id="19"
+									class="w-[18px] h-[18px] accent-indigo-500"
+								/>
+							</div>
+						</div>
+					</div>
+					<button
+						id="btnReset"
+						class="w-full px-3 py-3 rounded-lg border-none bg-red-500 text-white font-semibold cursor-pointer mt-4"
+					>
+						Reset All to Defaults
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Hidden canvas for video recording -->
+		<canvas id="recordCanvas"></canvas>
+
+		<script type="module" src="js/main.js"></script>
+	</body>
+</html>

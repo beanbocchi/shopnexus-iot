@@ -1,0 +1,19 @@
+{
+  "name": "iot",
+  "module": "index.js",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "ws": "^8.19.0"
+  },
+  "scripts": {
+    "start": "bun run index.js"
+  }
+}
