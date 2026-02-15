@@ -89,6 +89,40 @@ void sendSettings() {
   Serial.println("Settings sent");
 }
 
+void resetDefaults() {
+  sensor_t * s = esp_camera_sensor_get();
+  s->set_quality(s, 20);
+  s->set_framesize(s, FRAMESIZE_QVGA);
+  s->set_brightness(s, 0);
+  s->set_contrast(s, 0);
+  s->set_saturation(s, 0);
+  s->set_whitebal(s, 1);
+  s->set_exposure_ctrl(s, 1);
+  s->set_gain_ctrl(s, 1);
+  s->set_aec2(s, 1);
+  s->set_ae_level(s, 0);
+  s->set_gainceiling(s, (gainceiling_t)0);
+  s->set_bpc(s, 1);
+  s->set_wpc(s, 1);
+  s->set_raw_gma(s, 1);
+  s->set_lenc(s, 1);
+  s->set_hmirror(s, 0);
+  s->set_vflip(s, 0);
+  s->set_dcw(s, 1);
+  s->set_colorbar(s, 0);
+
+  if (currentXclkIdx != 2) {
+    esp_camera_deinit();
+    camConfig.xclk_freq_hz = xclkFreqs[2];
+    currentXclkIdx = 2;
+    camConfig.fb_count = 2;
+    esp_camera_init(&camConfig);
+  }
+
+  sendSettings();
+  Serial.println("Reset to defaults");
+}
+
 void initCamera() {
   camConfig.ledc_channel = LEDC_CHANNEL_0;
   camConfig.ledc_timer = LEDC_TIMER_0;
@@ -111,17 +145,10 @@ void initCamera() {
   camConfig.xclk_freq_hz = xclkFreqs[currentXclkIdx];
   camConfig.pixel_format = PIXFORMAT_JPEG;
 
-  if(psramFound()){
-    camConfig.frame_size = FRAMESIZE_QVGA; // 320x240
-    camConfig.jpeg_quality = 20;           // Good balance
-    camConfig.fb_count = 2;
-    camConfig.grab_mode = CAMERA_GRAB_LATEST;
-  } else {
-    camConfig.frame_size = FRAMESIZE_QVGA;
-    camConfig.jpeg_quality = 20;
-    camConfig.fb_count = 2;
-    camConfig.grab_mode = CAMERA_GRAB_LATEST;
-  }
+  camConfig.frame_size = FRAMESIZE_QVGA;
+  camConfig.jpeg_quality = 20;
+  camConfig.fb_count = 2;
+  camConfig.grab_mode = CAMERA_GRAB_LATEST;
 
   esp_camera_init(&camConfig);
 }
@@ -255,6 +282,9 @@ void loop() {
               esp_camera_init(&camConfig);
               Serial.printf("fb_count -> %d\n", val);
             }
+            break;
+          case 254: // Reset to defaults
+            resetDefaults();
             break;
           case 255: // Get current settings
             sendSettings();

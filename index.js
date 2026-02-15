@@ -1,15 +1,18 @@
-const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
-const net = require('net');
-const path = require('path');
+import express from 'express';
+import http from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
+import net from 'net';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const server = http.createServer(app);
 
 // --- WEBSOCKET SERVERS for Browser Clients ---
-const wssAudio = new WebSocket.Server({ noServer: true });
-const wssCamera = new WebSocket.Server({ noServer: true });
+const wssAudio = new WebSocketServer({ noServer: true });
+const wssCamera = new WebSocketServer({ noServer: true });
 
 // --- TCP SERVERS for ESP32 ---
 let esp32CamSocket = null;

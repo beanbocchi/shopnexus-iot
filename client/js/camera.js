@@ -19,7 +19,9 @@ export function connectCam() {
 			try {
 				const msg = JSON.parse(e.data)
 				if (msg.type === "settings") applySettings(msg.data)
-			} catch (err) {}
+			} catch (err) {
+				console.warn("Failed to parse settings:", err)
+			}
 			return
 		}
 

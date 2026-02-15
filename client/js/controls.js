@@ -7,30 +7,6 @@ export function sendCmd(id, val) {
 	}
 }
 
-const defaults = {
-	1: 20,
-	2: 5, // quality, framesize (QVGA)
-	3: 0,
-	4: 0,
-	5: 0, // brightness, contrast, saturation
-	6: 1,
-	7: 1,
-	8: 1,
-	9: 1, // AWB, AEC, AGC, AEC2
-	10: 0,
-	11: 0, // ae_level, gainceiling
-	12: 1,
-	13: 1,
-	14: 1,
-	15: 1, // BPC, WPC, raw_gma, lenc
-	16: 0,
-	17: 0,
-	18: 1,
-	19: 0, // hmirror, vflip, dcw, colorbar
-	20: 2, // xclk (index 2 = 12MHz)
-	21: 2, // fb_count
-}
-
 export function applySettings(s) {
 	if (s[1] !== undefined) {
 		qInput.value = s[1]
@@ -97,29 +73,6 @@ export function initControls() {
 	})
 
 	document.getElementById("btnReset").onclick = () => {
-		for (const [id, val] of Object.entries(defaults)) {
-			sendCmd(id, val)
-		}
-		qInput.value = 20
-		qVal.textContent = "20"
-		fSelect.value = "5"
-		document
-			.querySelectorAll(".grid input[type=range]")
-			.forEach((input) => {
-				const def = defaults[input.dataset.id] || 0
-				input.value = def
-				input.parentElement.querySelector("div:last-child").textContent =
-					def
-			})
-		document
-			.querySelectorAll(".grid input[type=checkbox]")
-			.forEach((input) => {
-				input.checked = !!defaults[input.dataset.id]
-			})
-		document
-			.querySelectorAll(".grid select.debug-select")
-			.forEach((sel) => {
-				sel.value = defaults[sel.dataset.id] || 0
-			})
+		sendCmd(254, 0)
 	}
 }
