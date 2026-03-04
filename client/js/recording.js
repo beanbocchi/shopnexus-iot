@@ -8,6 +8,7 @@ import {
 	recTime,
 	recDuration,
 } from "./elements.js"
+import { processVoice } from "./voice-pipeline.js"
 
 export const recording = {
 	isRecording: false,
@@ -149,7 +150,9 @@ function stopRecording() {
 		const audioBlob = createWavFile(recording.audioChunks)
 
 		downloadFile(videoBlob, "recording.webm")
-		downloadFile(audioBlob, "recording.wav")
+
+		// Send audio through voice pipeline instead of downloading
+		processVoice(audioBlob)
 
 		videoChunks = []
 		recording.audioChunks = []
