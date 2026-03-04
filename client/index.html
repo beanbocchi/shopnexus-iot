@@ -65,6 +65,15 @@
 							</div>
 						</div>
 
+						<!-- Voice Pipeline Controls -->
+						<div class="mt-[15px] flex gap-2.5 items-center">
+							<label class="text-xs text-gray-400">Style:</label>
+							<select id="styleSelect"
+								class="flex-1 px-1.5 py-1.5 bg-white/10 text-[#e0e6f0] border border-white/20 rounded-md text-sm">
+								<option value="">Loading styles...</option>
+							</select>
+						</div>
+
 						<!-- Controls -->
 						<div class="mt-[15px] flex gap-2.5 flex-wrap">
 							<div class="flex-1 min-w-[120px]">
@@ -123,6 +132,47 @@
 						>
 							Start Audio
 						</button>
+					</div>
+				</div>
+
+				<!-- Voice Pipeline Results -->
+				<div id="voicePipelineResults" class="hidden bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5">
+					<h2 class="text-[15px] mb-2.5 text-blue-400 flex items-center gap-2">
+						🔊 Voice Processing Results
+					</h2>
+
+					<!-- Loading indicator -->
+					<div id="voicePipelineLoading" class="hidden text-center py-8">
+						<div class="inline-block w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+						<p class="mt-2 text-sm text-gray-400" id="voicePipelineStatus">Processing...</p>
+					</div>
+
+					<!-- Spectrograms -->
+					<div id="spectrogramContainer" class="hidden">
+						<div class="grid grid-cols-2 gap-4 mb-4">
+							<div>
+								<h3 class="text-xs text-gray-400 mb-1">Before (Noisy)</h3>
+								<div id="spectrogramOriginal" class="bg-black rounded-lg overflow-hidden"></div>
+							</div>
+							<div>
+								<h3 class="text-xs text-gray-400 mb-1">After (Denoised)</h3>
+								<div id="spectrogramDenoised" class="bg-black rounded-lg overflow-hidden"></div>
+							</div>
+						</div>
+
+						<!-- Transcription -->
+						<div class="mb-3">
+							<label class="text-xs text-gray-400 block mb-1">Transcription (STT)</label>
+							<div id="transcriptionOutput"
+								class="w-full p-2.5 bg-white/5 border border-white/10 rounded-lg text-sm min-h-[40px]"></div>
+						</div>
+
+						<!-- Styled Description -->
+						<div id="styledDescriptionContainer" class="hidden">
+							<label class="text-xs text-gray-400 block mb-1">Styled Description</label>
+							<div id="styledDescriptionOutput"
+								class="w-full p-2.5 bg-white/5 border border-white/10 rounded-lg text-sm min-h-[60px]"></div>
+						</div>
 					</div>
 				</div>
 
