@@ -3,6 +3,7 @@ import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import net from 'net';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -171,6 +172,26 @@ app.use(express.static(path.join(__dirname, 'client')));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'client', 'index.html'));
+});
+
+app.get('/api/styles', async (req, res) => {
+    try {
+        const response = await fetch(`${process.env.VOICE_REPHRAZE_BASE_URL}/styles`);
+        const styles = await response.json();
+        res.json(styles);
+    } catch (err) {
+        console.error('Styles proxy error:', err);
+        res.status(502).json({ error: 'Failed to fetch styles' });
+    }
+});
+
+app.get('/api/audio/:filename', (req, res) => {
+    const filePath = path.join(__dirname, 'tmp', req.params.filename);
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+    res.setHeader('Content-Type', 'audio/wav');
+    fs.createReadStream(filePath).pipe(res);
 });
 
 server.listen(3000, '0.0.0.0', () => {
