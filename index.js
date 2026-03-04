@@ -5,11 +5,15 @@ import net from 'net';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const server = http.createServer(app);
+app.use(express.json());
+const upload = multer({ dest: 'tmp/' });
 
 // --- WEBSOCKET SERVERS for Browser Clients ---
 const wssAudio = new WebSocketServer({ noServer: true });
@@ -192,6 +196,76 @@ app.get('/api/audio/:filename', (req, res) => {
     }
     res.setHeader('Content-Type', 'audio/wav');
     fs.createReadStream(filePath).pipe(res);
+});
+
+app.post('/api/process-voice', upload.single('file'), async (req, res) => {
+    const id = crypto.randomUUID();
+    const originalPath = path.join(__dirname, 'tmp', `${id}-original.wav`);
+    const denoisedPath = path.join(__dirname, 'tmp', `${id}-denoised.wav`);
+
+    try {
+        // Rename uploaded file to original
+        fs.renameSync(req.file.path, originalPath);
+
+        // Step 1: Denoise
+        const denoiseForm = new FormData();
+        const originalBuffer = fs.readFileSync(originalPath);
+        denoiseForm.append('file', new Blob([originalBuffer], { type: 'audio/wav' }), 'audio.wav');
+
+        const denoiseRes = await fetch(`${process.env.DENOISE_SERVICE_BASE_URL}/denoise`, {
+            method: 'POST',
+            body: denoiseForm,
+        });
+
+        if (!denoiseRes.ok) {
+            throw new Error(`Denoise service error: ${denoiseRes.status}`);
+        }
+
+        const denoisedBuffer = Buffer.from(await denoiseRes.arrayBuffer());
+        fs.writeFileSync(denoisedPath, denoisedBuffer);
+
+        // Step 2: STT
+        const sttForm = new FormData();
+        sttForm.append('file', new Blob([denoisedBuffer], { type: 'audio/wav' }), 'audio.wav');
+
+        const sttRes = await fetch(`${process.env.VOICE_REPHRAZE_BASE_URL}/stt`, {
+            method: 'POST',
+            body: sttForm,
+        });
+
+        if (!sttRes.ok) {
+            throw new Error(`STT service error: ${sttRes.status}`);
+        }
+
+        const sttData = await sttRes.json();
+        const transcription = sttData.data;
+
+        // Step 3: Generate styled description
+        const style = req.body?.style || req.query?.style;
+        let styledDescription = null;
+
+        if (style) {
+            const genRes = await fetch(`${process.env.VOICE_REPHRAZE_BASE_URL}/gen`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ style, product_description: transcription }),
+            });
+
+            if (genRes.ok) {
+                styledDescription = await genRes.json();
+            }
+        }
+
+        res.json({
+            originalAudioUrl: `/api/audio/${id}-original.wav`,
+            denoisedAudioUrl: `/api/audio/${id}-denoised.wav`,
+            transcription,
+            styledDescription,
+        });
+    } catch (err) {
+        console.error('Voice pipeline error:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 server.listen(3000, '0.0.0.0', () => {
