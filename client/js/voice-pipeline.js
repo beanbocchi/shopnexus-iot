@@ -9,6 +9,10 @@ import {
 	transcriptionOutput,
 	styledDescriptionContainer,
 	styledDescriptionOutput,
+	btnPlayOriginal,
+	btnPlayDenoised,
+	timeOriginal,
+	timeDenoised,
 } from "./elements.js"
 
 import WaveSurfer from "https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js"
@@ -87,6 +91,39 @@ export async function processVoice(wavBlob) {
 	}
 }
 
+function formatAudioTime(seconds) {
+	if (!isFinite(seconds)) return "0:00"
+	const m = Math.floor(seconds / 60)
+	const s = Math.floor(seconds % 60)
+	return `${m}:${String(s).padStart(2, "0")}`
+}
+
+function setupPlayer(ws, btn, timeEl) {
+	const playIcon = "&#9654;"
+	const pauseIcon = "&#9646;&#9646;"
+
+	function updateBtn(playing) {
+		btn.querySelector(".play-icon").innerHTML = playing ? pauseIcon : playIcon
+	}
+
+	btn.onclick = () => ws.playPause()
+	ws.on("interaction", () => ws.playPause())
+
+	ws.on("play", () => updateBtn(true))
+	ws.on("pause", () => updateBtn(false))
+	ws.on("finish", () => updateBtn(false))
+
+	ws.on("ready", () => {
+		const dur = ws.getDuration()
+		timeEl.textContent = `0:00 / ${formatAudioTime(dur)}`
+	})
+
+	ws.on("timeupdate", (currentTime) => {
+		const dur = ws.getDuration()
+		timeEl.textContent = `${formatAudioTime(currentTime)} / ${formatAudioTime(dur)}`
+	})
+}
+
 function renderSpectrograms(originalUrl, denoisedUrl) {
 	// Destroy previous instances
 	if (wsOriginal) wsOriginal.destroy()
@@ -122,7 +159,6 @@ function renderSpectrograms(originalUrl, denoisedUrl) {
 		plugins: [Spectrogram.create(spectrogramOptions)],
 	})
 
-	// Click to play
-	wsOriginal.on("interaction", () => wsOriginal.playPause())
-	wsDenoised.on("interaction", () => wsDenoised.playPause())
+	setupPlayer(wsOriginal, btnPlayOriginal, timeOriginal)
+	setupPlayer(wsDenoised, btnPlayDenoised, timeDenoised)
 }

@@ -149,9 +149,7 @@ function stopRecording() {
 		const videoBlob = new Blob(videoChunks, { type: "video/webm" })
 		const audioBlob = createWavFile(recording.audioChunks)
 
-		downloadFile(videoBlob, "recording.webm")
-
-		// Send audio through voice pipeline instead of downloading
+		// Send audio through voice pipeline (transcribe only, no download)
 		processVoice(audioBlob)
 
 		videoChunks = []

@@ -23,3 +23,7 @@ export const spectrogramDenoised = document.getElementById("spectrogramDenoised"
 export const transcriptionOutput = document.getElementById("transcriptionOutput")
 export const styledDescriptionContainer = document.getElementById("styledDescriptionContainer")
 export const styledDescriptionOutput = document.getElementById("styledDescriptionOutput")
+export const btnPlayOriginal = document.getElementById("btnPlayOriginal")
+export const btnPlayDenoised = document.getElementById("btnPlayDenoised")
+export const timeOriginal = document.getElementById("timeOriginal")
+export const timeDenoised = document.getElementById("timeDenoised")

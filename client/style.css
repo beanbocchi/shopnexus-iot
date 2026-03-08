@@ -8,3 +8,11 @@ body {
 #recordCanvas {
 	display: none;
 }
+.audio-play-btn {
+	border: none;
+	line-height: 1;
+	flex-shrink: 0;
+}
+.audio-play-btn .play-icon {
+	pointer-events: none;
+}

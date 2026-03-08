@@ -151,12 +151,24 @@
 					<div id="spectrogramContainer" class="hidden">
 						<div class="grid grid-cols-2 gap-4 mb-4">
 							<div>
-								<h3 class="text-xs text-gray-400 mb-1">Before (Noisy)</h3>
-								<div id="spectrogramOriginal" class="bg-black rounded-lg overflow-hidden"></div>
+								<div class="flex items-center gap-2 mb-1.5">
+									<button id="btnPlayOriginal" class="audio-play-btn w-7 h-7 rounded-full bg-indigo-500 hover:bg-indigo-400 text-white flex items-center justify-center text-xs transition-colors" title="Play original">
+										<span class="play-icon">&#9654;</span>
+									</button>
+									<h3 class="text-xs text-gray-400">Before (Noisy)</h3>
+									<span id="timeOriginal" class="text-[10px] text-gray-500 font-mono ml-auto">0:00 / 0:00</span>
+								</div>
+								<div id="spectrogramOriginal" class="bg-black rounded-lg overflow-hidden cursor-pointer"></div>
 							</div>
 							<div>
-								<h3 class="text-xs text-gray-400 mb-1">After (Denoised)</h3>
-								<div id="spectrogramDenoised" class="bg-black rounded-lg overflow-hidden"></div>
+								<div class="flex items-center gap-2 mb-1.5">
+									<button id="btnPlayDenoised" class="audio-play-btn w-7 h-7 rounded-full bg-green-500 hover:bg-green-400 text-white flex items-center justify-center text-xs transition-colors" title="Play denoised">
+										<span class="play-icon">&#9654;</span>
+									</button>
+									<h3 class="text-xs text-gray-400">After (Denoised)</h3>
+									<span id="timeDenoised" class="text-[10px] text-gray-500 font-mono ml-auto">0:00 / 0:00</span>
+								</div>
+								<div id="spectrogramDenoised" class="bg-black rounded-lg overflow-hidden cursor-pointer"></div>
 							</div>
 						</div>
 
