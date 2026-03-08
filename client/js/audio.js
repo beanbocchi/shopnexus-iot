@@ -53,11 +53,12 @@ export function connectAudio() {
 }
 
 export function initAudioButton() {
-	btnAudio.onclick = () => {
+	btnAudio.onclick = async () => {
 		state.audioCtx = new (window.AudioContext ||
 			window.webkitAudioContext)({
 			sampleRate: 16000,
 		})
+		await state.audioCtx.resume()
 		btnAudio.disabled = true
 		btnAudio.textContent = "Listening..."
 	}
