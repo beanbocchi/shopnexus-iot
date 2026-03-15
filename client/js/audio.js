@@ -7,7 +7,8 @@ const bars = []
 export function initVisualizer() {
 	for (let i = 0; i < 30; i++) {
 		const b = document.createElement("div")
-		b.className = "w-1 bg-indigo-500 rounded-sm min-h-[2px] bar"
+		b.className = "w-1 rounded-t-sm min-h-[2px] bar"
+		// Alternating colors via nth-child handled in CSS
 		viz.appendChild(b)
 		bars.push(b)
 	}
@@ -23,8 +24,10 @@ function playChunk(buf) {
 		if (Math.abs(float32[i]) > max) max = Math.abs(float32[i])
 	}
 
-	// Viz
-	bars.forEach((b) => (b.style.height = max * 100 * Math.random() + "px"))
+	// Visualize
+	for (const b of bars) {
+		b.style.height = max * 100 * Math.random() + "px"
+	}
 
 	const audioBuf = state.audioCtx.createBuffer(1, float32.length, 16000)
 	audioBuf.getChannelData(0).set(float32)
@@ -54,8 +57,7 @@ export function connectAudio() {
 
 export function initAudioButton() {
 	btnAudio.onclick = async () => {
-		state.audioCtx = new (window.AudioContext ||
-			window.webkitAudioContext)({
+		state.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
 			sampleRate: 16000,
 		})
 		await state.audioCtx.resume()

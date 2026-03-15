@@ -25,6 +25,7 @@ import {
 } from "./elements.js"
 
 import { classify, renderClassification } from "./classify.js"
+import { formatTime, setVisible } from "./utils.js"
 
 import WaveSurfer from "https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js"
 import Spectrogram from "https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/plugins/spectrogram.esm.js"
@@ -37,15 +38,14 @@ export async function fetchStyles() {
 		const res = await fetch("/api/styles")
 		const styles = await res.json()
 		styleSelect.innerHTML = '<option value="">-- No style --</option>'
-		styles.forEach((s) => {
+		for (const s of styles) {
 			const value = typeof s === "string" ? s : (s.name || s.id || s.style || "unknown")
 			const desc = typeof s === "object" && s.description ? ` — ${s.description}` : ""
-			
 			const opt = document.createElement("option")
 			opt.value = value
 			opt.textContent = `${value}${desc}`
 			styleSelect.appendChild(opt)
-		})
+		}
 	} catch (err) {
 		console.error("Failed to fetch styles:", err)
 		styleSelect.innerHTML = '<option value="">Failed to load styles</option>'
@@ -56,15 +56,16 @@ export async function processVoice(wavBlob) {
 	const style = styleSelect.value
 
 	// Show results row & loading state
-	noResultsHint.classList.add("hidden")
-	resultsRow.classList.remove("hidden")
-	voicePipelineLoading.classList.remove("hidden")
-	spectrogramContainer.classList.add("hidden")
+	setVisible(noResultsHint, false)
+	setVisible(resultsRow, true)
+	setVisible(voicePipelineLoading, true)
+	setVisible(spectrogramContainer, false)
+
 	// Reset right panels
-	rephraseEmpty.classList.remove("hidden")
-	styledDescriptionContainer.classList.add("hidden")
-	classifySection.classList.add("hidden")
-	classifyEmpty.classList.remove("hidden")
+	setVisible(rephraseEmpty, true)
+	setVisible(styledDescriptionContainer, false)
+	setVisible(classifySection, false)
+	setVisible(classifyEmpty, true)
 	voicePipelineStatus.textContent = "Sending to denoise service..."
 
 	try {
@@ -86,8 +87,8 @@ export async function processVoice(wavBlob) {
 		const result = await res.json()
 
 		// Hide loading, show results
-		voicePipelineLoading.classList.add("hidden")
-		spectrogramContainer.classList.remove("hidden")
+		setVisible(voicePipelineLoading, false)
+		setVisible(spectrogramContainer, true)
 
 		// Render spectrograms
 		renderSpectrograms(result.originalAudioUrl, result.denoisedAudioUrl)
@@ -97,63 +98,24 @@ export async function processVoice(wavBlob) {
 
 		// Generate styled description (rephrase panel)
 		if (result.transcription && style) {
-			rephraseEmpty.classList.add("hidden")
-			styledDescriptionContainer.classList.remove("hidden")
-			
-			// Show spinner, clear old data
-			rephraseStatus.classList.remove("hidden")
+			handleRephrase(result.transcription, style)
+		} else if (result.transcription && !style) {
+			// No style selected — show hint
+			setVisible(rephraseEmpty, false)
+			setVisible(styledDescriptionContainer, true)
+			setVisible(rephraseStatus, false)
 			rephraseOriginalOutput.textContent = result.transcription
-			rephraseStyleBadge.textContent = style
-			styledDescriptionOutput.innerHTML = ""
-
-			// Fire-and-forget subtask
-			fetch("/api/gen-description", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ style, product_description: result.transcription })
-			})
-				.then((res) => {
-					if (!res.ok) throw new Error(`HTTP ${res.status}`)
-					return res.json()
-				})
-				.then((sd) => {
-					rephraseStatus.classList.add("hidden")
-					rephraseStyleBadge.textContent = sd.style || style
-					rephraseOriginalOutput.textContent = sd.original_description || result.transcription
-					
-					if (sd.generated_description) {
-						styledDescriptionOutput.textContent = sd.generated_description
-					} else {
-						styledDescriptionOutput.innerHTML =
-							'<span class="text-amber-400 text-xs">⚠️ Generation returned empty.</span>'
-					}
-				})
-				.catch((err) => {
-					rephraseStatus.classList.add("hidden")
-					styledDescriptionOutput.innerHTML = `<p class="text-red-400 text-xs">Error: ${err.message}</p>`
-				})
+			rephraseStyleBadge.textContent = "none"
+			styledDescriptionOutput.innerHTML =
+				'<span class="text-txt-muted text-xs">Select a style from the sidebar dropdown to generate a styled description.</span>'
 		} else {
-			styledDescriptionContainer.classList.add("hidden")
-			if (!result.transcription) rephraseEmpty.classList.remove("hidden")
+			setVisible(styledDescriptionContainer, false)
+			if (!result.transcription) setVisible(rephraseEmpty, true)
 		}
 
 		// Classify transcription
 		if (result.transcription) {
-			classifyEmpty.classList.add("hidden")
-			classifySection.classList.remove("hidden")
-			classifyResults.innerHTML = ""
-			classifyStatus.classList.remove("hidden")
-			
-			// Fire-and-forget subtask
-			classify(result.transcription, 10)
-				.then((classifyData) => {
-					classifyStatus.classList.add("hidden")
-					renderClassification(classifyResults, classifyData)
-				})
-				.catch((err) => {
-					classifyStatus.classList.add("hidden")
-					classifyResults.innerHTML = `<p class="text-red-400 text-xs">Error: ${err.message}</p>`
-				})
+			handleClassify(result.transcription)
 		}
 	} catch (err) {
 		console.error("Voice pipeline error:", err)
@@ -161,11 +123,56 @@ export async function processVoice(wavBlob) {
 	}
 }
 
-function formatAudioTime(seconds) {
-	if (!isFinite(seconds)) return "0:00"
-	const m = Math.floor(seconds / 60)
-	const s = Math.floor(seconds % 60)
-	return `${m}:${String(s).padStart(2, "0")}`
+function handleRephrase(transcription, style) {
+	setVisible(rephraseEmpty, false)
+	setVisible(styledDescriptionContainer, true)
+	setVisible(rephraseStatus, true)
+	rephraseOriginalOutput.textContent = transcription
+	rephraseStyleBadge.textContent = style
+	styledDescriptionOutput.innerHTML = ""
+
+	fetch("/api/gen-description", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ style, product_description: transcription }),
+	})
+		.then((res) => {
+			if (!res.ok) throw new Error(`HTTP ${res.status}`)
+			return res.json()
+		})
+		.then((sd) => {
+			setVisible(rephraseStatus, false)
+			rephraseStyleBadge.textContent = sd.style || style
+			rephraseOriginalOutput.textContent = sd.original_description || transcription
+
+			if (sd.generated_description) {
+				styledDescriptionOutput.textContent = sd.generated_description
+			} else {
+				styledDescriptionOutput.innerHTML =
+					'<span class="text-accent-amber text-xs">Warning: Generation returned empty.</span>'
+			}
+		})
+		.catch((err) => {
+			setVisible(rephraseStatus, false)
+			styledDescriptionOutput.innerHTML = `<p class="text-accent-red text-xs">Error: ${err.message}</p>`
+		})
+}
+
+function handleClassify(transcription) {
+	setVisible(classifyEmpty, false)
+	setVisible(classifySection, true)
+	classifyResults.innerHTML = ""
+	setVisible(classifyStatus, true)
+
+	classify(transcription, 10)
+		.then((classifyData) => {
+			setVisible(classifyStatus, false)
+			renderClassification(classifyResults, classifyData)
+		})
+		.catch((err) => {
+			setVisible(classifyStatus, false)
+			classifyResults.innerHTML = `<p class="text-accent-red text-xs">Error: ${err.message}</p>`
+		})
 }
 
 function setupPlayer(ws, btn, timeEl) {
@@ -178,19 +185,16 @@ function setupPlayer(ws, btn, timeEl) {
 
 	btn.onclick = () => ws.playPause()
 	ws.on("interaction", () => ws.playPause())
-
 	ws.on("play", () => updateBtn(true))
 	ws.on("pause", () => updateBtn(false))
 	ws.on("finish", () => updateBtn(false))
 
 	ws.on("ready", () => {
-		const dur = ws.getDuration()
-		timeEl.textContent = `0:00 / ${formatAudioTime(dur)}`
+		timeEl.textContent = `0:00 / ${formatTime(ws.getDuration())}`
 	})
 
 	ws.on("timeupdate", (currentTime) => {
-		const dur = ws.getDuration()
-		timeEl.textContent = `${formatAudioTime(currentTime)} / ${formatAudioTime(dur)}`
+		timeEl.textContent = `${formatTime(currentTime)} / ${formatTime(ws.getDuration())}`
 	})
 }
 
@@ -206,15 +210,15 @@ function renderSpectrograms(originalUrl, denoisedUrl) {
 	const spectrogramOptions = {
 		labels: true,
 		height: 150,
-		labelsColor: "#9ca3af",
+		labelsColor: "#8892a8",
 		labelsBackground: "transparent",
 		colorMap: "roseus",
 	}
 
 	wsOriginal = WaveSurfer.create({
 		container: spectrogramOriginal,
-		waveColor: "#6366f1",
-		progressColor: "#4338ca",
+		waveColor: "#8b5cf6",
+		progressColor: "#6d3fcc",
 		height: 60,
 		url: originalUrl,
 		plugins: [Spectrogram.create(spectrogramOptions)],
@@ -222,8 +226,8 @@ function renderSpectrograms(originalUrl, denoisedUrl) {
 
 	wsDenoised = WaveSurfer.create({
 		container: spectrogramDenoised,
-		waveColor: "#22c55e",
-		progressColor: "#16a34a",
+		waveColor: "#00ff88",
+		progressColor: "#00b860",
 		height: 60,
 		url: denoisedUrl,
 		plugins: [Spectrogram.create(spectrogramOptions)],

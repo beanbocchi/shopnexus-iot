@@ -13,6 +13,7 @@ export function connectCam() {
 	state.wsCam.onopen = () => {
 		sendCmd(255, 0)
 	}
+
 	state.wsCam.onmessage = (e) => {
 		// Text message = settings JSON
 		if (typeof e.data === "string") {
@@ -29,9 +30,7 @@ export function connectCam() {
 		const blob = new Blob([e.data], { type: "image/jpeg" })
 		if (img.src) URL.revokeObjectURL(img.src)
 		img.src = URL.createObjectURL(blob)
-		img.onload = () => {
-			drawFrameToCanvas()
-		}
+		img.onload = () => drawFrameToCanvas()
 
 		// Stats
 		frameCount++
@@ -44,6 +43,7 @@ export function connectCam() {
 			lastTime = now
 		}
 	}
+
 	state.wsCam.onclose = () => {
 		setTimeout(connectCam, 2000)
 	}
