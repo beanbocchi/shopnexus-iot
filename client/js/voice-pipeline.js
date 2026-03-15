@@ -10,6 +10,8 @@ import {
 	spectrogramDenoised,
 	transcriptionOutput,
 	styledDescriptionContainer,
+	rephraseStyleBadge,
+	rephraseOriginalOutput,
 	styledDescriptionOutput,
 	btnPlayOriginal,
 	btnPlayDenoised,
@@ -92,14 +94,18 @@ export async function processVoice(wavBlob) {
 		// Display transcription
 		transcriptionOutput.textContent = result.transcription
 
-		// Display styled description
+		// Display styled description (rephrase panel)
 		if (result.styledDescription) {
 			rephraseEmpty.classList.add("hidden")
 			styledDescriptionContainer.classList.remove("hidden")
 
-			const genText = result.styledDescription.generated_description
-			if (genText) {
-				styledDescriptionOutput.textContent = genText
+			const sd = result.styledDescription
+			
+			rephraseStyleBadge.textContent = sd.style || styleSelect.value || "default"
+			rephraseOriginalOutput.textContent = sd.original_description || result.transcription || ""
+
+			if (sd.generated_description) {
+				styledDescriptionOutput.textContent = sd.generated_description
 			} else {
 				styledDescriptionOutput.innerHTML =
 					'<span class="text-amber-400 text-xs">⚠️ Generation returned empty — the LLM may have failed silently. Check the gen service logs.</span>'
