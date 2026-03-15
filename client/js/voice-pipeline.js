@@ -17,6 +17,7 @@ import {
 	classifySection,
 	classifyResults,
 	classifyStatus,
+	classifyEmpty,
 } from "./elements.js"
 
 import { classify, renderClassification } from "./classify.js"
@@ -51,10 +52,11 @@ export async function processVoice(wavBlob) {
 	resultsRow.classList.remove("hidden")
 	voicePipelineLoading.classList.remove("hidden")
 	spectrogramContainer.classList.add("hidden")
-	// Reset right panel
+	// Reset right panels
 	rephraseEmpty.classList.remove("hidden")
 	styledDescriptionContainer.classList.add("hidden")
 	classifySection.classList.add("hidden")
+	classifyEmpty.classList.remove("hidden")
 	voicePipelineStatus.textContent = "Sending to denoise service..."
 
 	try {
@@ -99,16 +101,17 @@ export async function processVoice(wavBlob) {
 
 		// Classify transcription
 		if (result.transcription) {
-			rephraseEmpty.classList.add("hidden")
+			classifyEmpty.classList.add("hidden")
 			classifySection.classList.remove("hidden")
 			classifyResults.innerHTML = ""
 			classifyStatus.classList.remove("hidden")
 			try {
-				const classifyData = await classify(result.transcription, 5)
+				const classifyData = await classify(result.transcription, 10)
 				classifyStatus.classList.add("hidden")
 				renderClassification(classifyResults, classifyData)
 			} catch (err) {
-				classifyStatus.textContent = `Classification error: ${err.message}`
+				classifyStatus.classList.add("hidden")
+				classifyResults.innerHTML = `<p class="text-red-400 text-xs">Error: ${err.message}</p>`
 			}
 		}
 	} catch (err) {

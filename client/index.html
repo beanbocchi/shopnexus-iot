@@ -134,10 +134,10 @@
 						</button>
 					</div>
 				</div>
-			<!-- Results Row: Voice Recognition | Product Rephrase -->
-			<div id="resultsRow" class="hidden grid grid-cols-2 gap-4">
+			<!-- Results Row: 3 columns -->
+			<div id="resultsRow" class="hidden grid grid-cols-3 gap-4">
 
-				<!-- LEFT: Voice Recognition -->
+				<!-- COL 1: Voice Recognition -->
 				<div class="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5 flex flex-col gap-3">
 					<h2 class="text-[15px] text-blue-400 flex items-center gap-2">
 						🎙️ Voice Recognition
@@ -173,7 +173,6 @@
 								<div id="spectrogramDenoised" class="bg-black rounded-lg overflow-hidden cursor-pointer"></div>
 							</div>
 						</div>
-
 						<!-- Transcription -->
 						<div>
 							<label class="text-xs text-gray-400 block mb-1">Transcription (STT)</label>
@@ -183,13 +182,13 @@
 					</div>
 				</div>
 
-				<!-- RIGHT: Product Description Rephrase -->
+				<!-- COL 2: Product Description Rephrase -->
 				<div class="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5 flex flex-col gap-3">
 					<h2 class="text-[15px] text-emerald-400 flex items-center gap-2">
 						✨ Product Description Rephrase
 					</h2>
 
-					<!-- Placeholder before any result -->
+					<!-- Placeholder -->
 					<div id="rephraseEmpty" class="flex-1 flex items-center justify-center py-8">
 						<p class="text-xs text-gray-500 text-center">Results will appear here<br/>after processing.</p>
 					</div>
@@ -200,22 +199,34 @@
 						<div id="styledDescriptionOutput"
 							class="w-full p-2.5 bg-white/5 border border-white/10 rounded-lg text-sm min-h-[60px]"></div>
 					</div>
+				</div>
 
-					<!-- Category Classification -->
-					<div id="classifySection" class="hidden flex flex-col gap-2">
-						<div class="flex items-center gap-2">
-							<h3 class="text-xs text-gray-400">🏷️ Category Classification</h3>
-							<!-- inline spinner -->
-							<div id="classifyStatus" class="hidden flex items-center gap-1.5">
-								<div class="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-								<span class="text-[11px] text-gray-500">Classifying…</span>
-							</div>
+				<!-- COL 3: Category Classification (top 10) -->
+				<div class="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5 flex flex-col gap-2">
+					<div class="flex items-center justify-between">
+						<h2 class="text-[15px] text-purple-400 flex items-center gap-2">
+							🏷️ Category Classification
+						</h2>
+						<!-- spinner shown while classifying -->
+						<div id="classifyStatus" class="hidden flex items-center gap-1.5">
+							<div class="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+							<span class="text-[11px] text-gray-500">Classifying…</span>
 						</div>
+					</div>
+
+					<!-- Placeholder -->
+					<div id="classifySection" class="hidden flex flex-col gap-1">
 						<div id="classifyResults"></div>
+					</div>
+
+					<!-- Empty state -->
+					<div id="classifyEmpty" class="flex-1 flex items-center justify-center py-8">
+						<p class="text-xs text-gray-500 text-center">Categories will appear<br/>after processing.</p>
 					</div>
 				</div>
 
 			</div>
+
 
 			<!-- Debug Controls -->
 				<div
