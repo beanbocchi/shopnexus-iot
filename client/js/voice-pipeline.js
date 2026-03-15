@@ -1,6 +1,7 @@
 import {
 	styleSelect,
 	resultsRow,
+	noResultsHint,
 	rephraseEmpty,
 	voicePipelineLoading,
 	voicePipelineStatus,
@@ -49,6 +50,7 @@ export async function processVoice(wavBlob) {
 	const style = styleSelect.value
 
 	// Show results row & loading state
+	noResultsHint.classList.add("hidden")
 	resultsRow.classList.remove("hidden")
 	voicePipelineLoading.classList.remove("hidden")
 	spectrogramContainer.classList.add("hidden")
@@ -94,10 +96,18 @@ export async function processVoice(wavBlob) {
 		if (result.styledDescription) {
 			rephraseEmpty.classList.add("hidden")
 			styledDescriptionContainer.classList.remove("hidden")
-			styledDescriptionOutput.textContent = result.styledDescription.generated_description
+
+			const genText = result.styledDescription.generated_description
+			if (genText) {
+				styledDescriptionOutput.textContent = genText
+			} else {
+				styledDescriptionOutput.innerHTML =
+					'<span class="text-amber-400 text-xs">⚠️ Generation returned empty — the LLM may have failed silently. Check the gen service logs.</span>'
+			}
 		} else {
 			styledDescriptionContainer.classList.add("hidden")
 		}
+
 
 		// Classify transcription
 		if (result.transcription) {
