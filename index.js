@@ -270,7 +270,7 @@ app.post('/api/process-voice', upload.single('file'), async (req, res) => {
 
 app.post('/api/classify', async (req, res) => {
     try {
-        const response = await fetch('http://localhost:5002/classify', {
+        const response = await fetch(`${process.env.CLASSIFY_BASE_URL}/classify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(req.body),
