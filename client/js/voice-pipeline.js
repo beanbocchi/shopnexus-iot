@@ -37,9 +37,12 @@ export async function fetchStyles() {
 		const styles = await res.json()
 		styleSelect.innerHTML = '<option value="">-- No style --</option>'
 		styles.forEach((s) => {
+			const value = typeof s === "string" ? s : (s.name || s.id || s.style || "unknown")
+			const desc = typeof s === "object" && s.description ? ` — ${s.description}` : ""
+			
 			const opt = document.createElement("option")
-			opt.value = s.name
-			opt.textContent = `${s.name} — ${s.description}`
+			opt.value = value
+			opt.textContent = `${value}${desc}`
 			styleSelect.appendChild(opt)
 		})
 	} catch (err) {
@@ -65,10 +68,10 @@ export async function processVoice(wavBlob) {
 
 	try {
 		const formData = new FormData()
-		formData.append("file", wavBlob, "recording.wav")
 		if (style) {
 			formData.append("style", style)
 		}
+		formData.append("file", wavBlob, "recording.wav")
 
 		voicePipelineStatus.textContent = "Processing pipeline (denoise → STT → gen → classify)..."
 
