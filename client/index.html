@@ -134,11 +134,13 @@
 						</button>
 					</div>
 				</div>
+			<!-- Results Row: Voice Recognition | Product Rephrase -->
+			<div id="resultsRow" class="hidden grid grid-cols-2 gap-4">
 
-				<!-- Voice Pipeline Results -->
-				<div id="voicePipelineResults" class="hidden bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5">
-					<h2 class="text-[15px] mb-2.5 text-blue-400 flex items-center gap-2">
-						🔊 Voice Processing Results
+				<!-- LEFT: Voice Recognition -->
+				<div class="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5 flex flex-col gap-3">
+					<h2 class="text-[15px] text-blue-400 flex items-center gap-2">
+						🎙️ Voice Recognition
 					</h2>
 
 					<!-- Loading indicator -->
@@ -147,9 +149,9 @@
 						<p class="mt-2 text-sm text-gray-400" id="voicePipelineStatus">Processing...</p>
 					</div>
 
-					<!-- Spectrograms -->
-					<div id="spectrogramContainer" class="hidden">
-						<div class="grid grid-cols-2 gap-4 mb-4">
+					<!-- Spectrograms + Transcription -->
+					<div id="spectrogramContainer" class="hidden flex flex-col gap-3">
+						<div class="grid grid-cols-2 gap-3">
 							<div>
 								<div class="flex items-center gap-2 mb-1.5">
 									<button id="btnPlayOriginal" class="audio-play-btn w-7 h-7 rounded-full bg-indigo-500 hover:bg-indigo-400 text-white flex items-center justify-center text-xs transition-colors" title="Play original">
@@ -173,35 +175,46 @@
 						</div>
 
 						<!-- Transcription -->
-						<div class="mb-3">
+						<div>
 							<label class="text-xs text-gray-400 block mb-1">Transcription (STT)</label>
 							<div id="transcriptionOutput"
 								class="w-full p-2.5 bg-white/5 border border-white/10 rounded-lg text-sm min-h-[40px]"></div>
 						</div>
-
-						<!-- Styled Description -->
-						<div id="styledDescriptionContainer" class="hidden">
-							<label class="text-xs text-gray-400 block mb-1">Styled Description</label>
-							<div id="styledDescriptionOutput"
-								class="w-full p-2.5 bg-white/5 border border-white/10 rounded-lg text-sm min-h-[60px]"></div>
-						</div>
 					</div>
 				</div>
 
-			<!-- Category Classification Results -->
-			<div id="classifySection" class="hidden bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5">
-				<h2 class="text-[15px] mb-3 text-purple-400 flex items-center gap-2">
-					🏷️ Category Classification
-				</h2>
+				<!-- RIGHT: Product Description Rephrase -->
+				<div class="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5 flex flex-col gap-3">
+					<h2 class="text-[15px] text-emerald-400 flex items-center gap-2">
+						✨ Product Description Rephrase
+					</h2>
 
-				<!-- Spinner while classifying -->
-				<div id="classifyStatus" class="hidden text-center py-4">
-					<div class="inline-block w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-					<p class="mt-2 text-xs text-gray-400">Classifying…</p>
+					<!-- Placeholder before any result -->
+					<div id="rephraseEmpty" class="flex-1 flex items-center justify-center py-8">
+						<p class="text-xs text-gray-500 text-center">Results will appear here<br/>after processing.</p>
+					</div>
+
+					<!-- Styled Description -->
+					<div id="styledDescriptionContainer" class="hidden flex flex-col gap-1.5">
+						<label class="text-xs text-gray-400 block">Styled Description</label>
+						<div id="styledDescriptionOutput"
+							class="w-full p-2.5 bg-white/5 border border-white/10 rounded-lg text-sm min-h-[60px]"></div>
+					</div>
+
+					<!-- Category Classification -->
+					<div id="classifySection" class="hidden flex flex-col gap-2">
+						<div class="flex items-center gap-2">
+							<h3 class="text-xs text-gray-400">🏷️ Category Classification</h3>
+							<!-- inline spinner -->
+							<div id="classifyStatus" class="hidden flex items-center gap-1.5">
+								<div class="w-3.5 h-3.5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+								<span class="text-[11px] text-gray-500">Classifying…</span>
+							</div>
+						</div>
+						<div id="classifyResults"></div>
+					</div>
 				</div>
 
-				<!-- Results rendered here by classify.js -->
-				<div id="classifyResults"></div>
 			</div>
 
 			<!-- Debug Controls -->

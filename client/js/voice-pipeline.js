@@ -1,6 +1,7 @@
 import {
 	styleSelect,
-	voicePipelineResults,
+	resultsRow,
+	rephraseEmpty,
 	voicePipelineLoading,
 	voicePipelineStatus,
 	spectrogramContainer,
@@ -46,10 +47,14 @@ export async function fetchStyles() {
 export async function processVoice(wavBlob) {
 	const style = styleSelect.value
 
-	// Show loading
-	voicePipelineResults.classList.remove("hidden")
+	// Show results row & loading state
+	resultsRow.classList.remove("hidden")
 	voicePipelineLoading.classList.remove("hidden")
 	spectrogramContainer.classList.add("hidden")
+	// Reset right panel
+	rephraseEmpty.classList.remove("hidden")
+	styledDescriptionContainer.classList.add("hidden")
+	classifySection.classList.add("hidden")
 	voicePipelineStatus.textContent = "Sending to denoise service..."
 
 	try {
@@ -59,7 +64,7 @@ export async function processVoice(wavBlob) {
 			formData.append("style", style)
 		}
 
-		voicePipelineStatus.textContent = "Processing pipeline (denoise → STT → gen)..."
+		voicePipelineStatus.textContent = "Processing pipeline (denoise → STT → gen → classify)..."
 
 		const res = await fetch("/api/process-voice", {
 			method: "POST",
@@ -85,6 +90,7 @@ export async function processVoice(wavBlob) {
 
 		// Display styled description
 		if (result.styledDescription) {
+			rephraseEmpty.classList.add("hidden")
 			styledDescriptionContainer.classList.remove("hidden")
 			styledDescriptionOutput.textContent = result.styledDescription.generated_description
 		} else {
@@ -93,6 +99,7 @@ export async function processVoice(wavBlob) {
 
 		// Classify transcription
 		if (result.transcription) {
+			rephraseEmpty.classList.add("hidden")
 			classifySection.classList.remove("hidden")
 			classifyResults.innerHTML = ""
 			classifyStatus.classList.remove("hidden")
