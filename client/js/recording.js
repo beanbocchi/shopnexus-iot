@@ -9,6 +9,7 @@ import {
 	recDuration,
 } from "./elements.js"
 import { processVoice } from "./voice-pipeline.js"
+import { formatTime, setVisible } from "./utils.js"
 
 export const recording = {
 	isRecording: false,
@@ -34,12 +35,6 @@ export function drawFrameToCanvas() {
 	recordCtx.drawImage(img, 0, 0)
 }
 
-function formatTime(seconds) {
-	const mins = Math.floor(seconds / 60)
-	const secs = seconds % 60
-	return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
-}
-
 function writeString(view, offset, string) {
 	for (let i = 0; i < string.length; i++) {
 		view.setUint8(offset + i, string.charCodeAt(i))
@@ -48,9 +43,9 @@ function writeString(view, offset, string) {
 
 function createWavFile(chunks) {
 	let totalLength = 0
-	chunks.forEach((chunk) => {
+	for (const chunk of chunks) {
 		totalLength += chunk.byteLength
-	})
+	}
 
 	const sampleRate = 16000
 	const numChannels = 1
@@ -70,11 +65,7 @@ function createWavFile(chunks) {
 	view.setUint16(20, 1, true)
 	view.setUint16(22, numChannels, true)
 	view.setUint32(24, sampleRate, true)
-	view.setUint32(
-		28,
-		(sampleRate * numChannels * bitsPerSample) / 8,
-		true,
-	)
+	view.setUint32(28, (sampleRate * numChannels * bitsPerSample) / 8, true)
 	view.setUint16(32, (numChannels * bitsPerSample) / 8, true)
 	view.setUint16(34, bitsPerSample, true)
 
@@ -84,26 +75,15 @@ function createWavFile(chunks) {
 
 	// Copy audio data
 	let offset = 44
-	chunks.forEach((chunk) => {
+	for (const chunk of chunks) {
 		const chunkView = new Int16Array(chunk)
 		for (let i = 0; i < chunkView.length; i++) {
 			view.setInt16(offset, chunkView[i], true)
 			offset += 2
 		}
-	})
+	}
 
 	return new Blob([buffer], { type: "audio/wav" })
-}
-
-function downloadFile(blob, filename) {
-	const url = URL.createObjectURL(blob)
-	const a = document.createElement("a")
-	a.href = url
-	a.download = filename
-	document.body.appendChild(a)
-	a.click()
-	document.body.removeChild(a)
-	URL.revokeObjectURL(url)
 }
 
 function startRecording() {
@@ -127,13 +107,13 @@ function startRecording() {
 	recording.isRecording = true
 	btnRecord.disabled = true
 	btnStopRecord.disabled = false
-	recIndicator.classList.remove("hidden")
-	recTime.classList.remove("hidden")
+	setVisible(recIndicator, true)
+	setVisible(recTime, true)
 
 	recordStartTime = Date.now()
 	recordInterval = setInterval(() => {
 		const elapsed = Math.floor((Date.now() - recordStartTime) / 1000)
-		recDuration.textContent = formatTime(elapsed)
+		recDuration.textContent = formatTime(elapsed, true)
 	}, 1000)
 }
 
@@ -146,18 +126,17 @@ function stopRecording() {
 	videoRecorder.stop()
 
 	videoRecorder.onstop = () => {
-		const videoBlob = new Blob(videoChunks, { type: "video/webm" })
 		const audioBlob = createWavFile(recording.audioChunks)
 
-		// Send audio through voice pipeline (transcribe only, no download)
+		// Send audio through voice pipeline
 		processVoice(audioBlob)
 
 		videoChunks = []
 		recording.audioChunks = []
 		btnRecord.disabled = false
 		btnStopRecord.disabled = true
-		recIndicator.classList.add("hidden")
-		recTime.classList.add("hidden")
+		setVisible(recIndicator, false)
+		setVisible(recTime, false)
 		recDuration.textContent = "00:00"
 	}
 }

@@ -4,54 +4,83 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>ShopNexus IoT — ESP32 Live Dashboard</title>
-		<link
-			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-			rel="stylesheet"
-		/>
 		<script src="https://cdn.tailwindcss.com"></script>
+		<script>
+			tailwind.config = {
+				theme: {
+					extend: {
+						colors: {
+							surface: { root: '#070a12', DEFAULT: '#0c1020', raised: '#111728', elevated: '#161d30' },
+							accent: { cyan: '#00d4ff', 'cyan-dim': '#0098b8', amber: '#ffb800', emerald: '#00ff88', 'emerald-dim': '#00b860', red: '#ff3b5c', violet: '#8b5cf6', 'violet-dim': '#6d3fcc' },
+							txt: { primary: '#e8ecf4', secondary: '#8892a8', muted: '#556078' },
+						},
+						fontFamily: {
+							display: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+							body: ['"DM Sans"', 'system-ui', 'sans-serif'],
+						},
+						borderColor: {
+							subtle: 'rgba(255,255,255,0.04)',
+							default: 'rgba(255,255,255,0.08)',
+							strong: 'rgba(255,255,255,0.14)',
+						}
+					}
+				}
+			}
+		</script>
 		<link rel="stylesheet" href="style.css" />
-		<style>
-			body { font-family: 'Inter', sans-serif; }
-			.panel { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 1rem; padding: 1.25rem; }
-			.section-title { font-size: 0.875rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-		</style>
 	</head>
-	<body class="bg-[#080c18] text-[#dde4f0] min-h-screen p-6">
+	<body class="bg-surface-root text-txt-primary min-h-screen font-body antialiased">
 
-		<div class="max-w-[1600px] mx-auto flex flex-col gap-6">
+		<!-- ── APP SHELL ─────────────────────────────────────────── -->
+		<div class="relative z-[1] max-w-[1640px] mx-auto px-7 py-6 flex flex-col gap-5">
 
-			<!-- ── PAGE HEADER ─────────────────────────────────────────── -->
-			<div class="flex items-center justify-between">
+			<!-- ── HEADER ────────────────────────────────────────── -->
+			<header class="flex items-center justify-between pb-4 border-b border-subtle stagger-1">
 				<div>
-					<h1 class="text-xl font-bold text-white tracking-tight">ShopNexus IoT Dashboard</h1>
-					<p class="text-xs text-gray-500 mt-0.5">ESP32-CAM · Audio · AI Pipeline</p>
+					<h1 class="font-display text-lg font-bold tracking-tight text-txt-primary">
+						ShopNexus<span class="text-accent-cyan">IoT</span>
+					</h1>
+					<p class="font-display text-[0.6875rem] text-txt-muted tracking-widest uppercase mt-0.5">
+						ESP32-CAM · Audio · AI Pipeline
+					</p>
 				</div>
-				<div class="flex items-center gap-2 text-xs text-gray-500">
-					<span class="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block"></span>
+				<div class="flex items-center gap-2 font-display text-[0.6875rem] font-medium text-accent-emerald uppercase tracking-widest bg-accent-emerald/10 border border-accent-emerald/15 px-3 py-1.5 rounded-full">
+					<span class="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse-glow"></span>
 					Live
 				</div>
-			</div>
+			</header>
 
-			<!-- ── MAIN LAYOUT: sidebar (left) + content (right) ──────── -->
-			<div class="grid grid-cols-[360px_1fr] gap-6 items-start">
+			<!-- ── MAIN GRID ─────────────────────────────────────── -->
+			<div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-5 items-start">
 
-				<!-- ════ LEFT SIDEBAR ════════════════════════════════════ -->
-				<div class="flex flex-col gap-5">
+				<!-- ════ LEFT SIDEBAR ═══════════════════════════════ -->
+				<div class="flex flex-col gap-4">
 
-					<!-- Camera Feed -->
-					<div class="panel">
-						<div class="section-title text-blue-400">📷 Live Feed</div>
-						<div class="w-full bg-black rounded-xl overflow-hidden relative">
+					<!-- Camera Feed Panel -->
+					<div class="bg-surface border border-default rounded-[14px] p-5 relative overflow-hidden panel-glow stagger-1">
+						<div class="font-display text-[0.6875rem] font-semibold tracking-[0.1em] uppercase mb-4 pb-2.5 border-b border-subtle flex items-center gap-2 text-accent-cyan">
+							<span class="text-sm">&#x1F3A5;</span> Live Feed
+						</div>
+
+						<!-- Viewport -->
+						<div class="w-full bg-black rounded-[10px] overflow-hidden relative border border-subtle">
 							<img
 								id="cam"
 								src=""
-								alt=""
-								class="w-full object-contain block"
-								style="min-height: 200px; max-height: 340px;"
+								alt="ESP32 Camera"
+								class="w-full object-contain block min-h-[200px] max-h-[340px]"
 							/>
-							<div class="absolute bottom-2.5 left-2.5 bg-black/70 px-2.5 py-1 rounded-lg text-[11px] font-mono text-gray-300 backdrop-blur-sm">
-								FPS: <span id="fps">0</span> &nbsp;|&nbsp; Size: <span id="size">0</span> KB
-								<span id="recIndicator" class="ml-2 text-red-400 hidden">● REC</span>
+							<div class="absolute bottom-2 left-2 flex items-center gap-2.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-md border border-subtle">
+								<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide">
+									FPS <strong class="text-accent-cyan font-semibold" id="fps">0</strong>
+								</span>
+								<span class="text-white/10">|</span>
+								<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide">
+									<strong class="text-accent-cyan font-semibold" id="size">0</strong> KB
+								</span>
+								<span id="recIndicator" class="hidden font-display text-[0.625rem] font-bold text-accent-red tracking-widest animate-rec-blink">
+									&#x25CF; REC
+								</span>
 							</div>
 						</div>
 
@@ -59,23 +88,25 @@
 						<div class="mt-4 flex gap-3">
 							<button
 								id="btnRecord"
-								class="flex-1 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-							>🔴 Start Recording</button>
+								class="flex-1 font-display text-xs font-semibold uppercase tracking-wide px-4 py-2.5 rounded-[10px] bg-accent-red text-white border border-accent-red/40 shadow-[0_2px_12px_rgba(255,59,92,0.2)] hover:bg-[#ff5070] hover:shadow-[0_4px_20px_rgba(255,59,92,0.35)] hover:-translate-y-px transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+							>&#x25CF; Record</button>
 							<button
 								id="btnStopRecord"
-								class="flex-1 px-4 py-2.5 rounded-lg bg-gray-600 hover:bg-gray-500 text-white text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+								class="flex-1 font-display text-xs font-semibold uppercase tracking-wide px-4 py-2.5 rounded-[10px] bg-surface-elevated text-txt-secondary border border-strong hover:bg-surface-raised hover:text-txt-primary hover:border-accent-cyan-dim transition-all disabled:opacity-30 disabled:cursor-not-allowed"
 								disabled
-							>⏹️ Stop</button>
+							>&#x23F9; Stop</button>
 						</div>
-						<div class="mt-2 text-right text-xs text-gray-500">
-							<span id="recTime" class="hidden">Duration: <span id="recDuration" class="font-mono">00:00</span></span>
+						<div class="mt-2 text-right font-display text-[0.6875rem] text-txt-muted">
+							<span id="recTime" class="hidden">
+								Duration: <span id="recDuration" class="text-accent-red font-semibold">00:00</span>
+							</span>
 						</div>
 
-						<!-- Style select -->
+						<!-- Style Select -->
 						<div class="mt-4 flex items-center gap-3">
-							<label class="text-xs text-gray-400 shrink-0">Style:</label>
+							<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase shrink-0">Style</label>
 							<select id="styleSelect"
-								class="flex-1 px-2.5 py-2 bg-white/8 text-[#dde4f0] border border-white/15 rounded-lg text-sm focus:outline-none focus:border-blue-500/50">
+								class="form-select flex-1 px-3 py-2 bg-surface-raised text-txt-primary border border-default rounded-md text-sm focus:outline-none focus:border-accent-cyan-dim focus:shadow-[0_0_0_2px_rgba(0,212,255,0.12)] pr-7 transition-all">
 								<option value="">Loading styles...</option>
 							</select>
 						</div>
@@ -83,50 +114,55 @@
 						<!-- Quality + Resolution -->
 						<div class="mt-4 grid grid-cols-2 gap-4">
 							<div>
-								<label class="text-xs text-gray-400 block mb-1.5">Quality (10–63)</label>
-								<input type="range" id="quality" min="10" max="63" value="20" class="w-full accent-blue-500" />
-								<div class="text-right text-[11px] text-blue-400 font-mono mt-0.5" id="qVal">20</div>
+								<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-1.5">Quality (10-63)</label>
+								<input type="range" id="quality" min="10" max="63" value="20" />
+								<div class="font-display text-[0.625rem] font-semibold text-accent-cyan text-right mt-0.5" id="qVal">20</div>
 							</div>
 							<div>
-								<label class="text-xs text-gray-400 block mb-1.5">Resolution</label>
+								<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-1.5">Resolution</label>
 								<select id="framesize"
-									class="w-full px-2 py-1.5 bg-white/8 text-[#dde4f0] border border-white/15 rounded-lg text-xs focus:outline-none">
-									<option value="13">UXGA 1600×1200</option>
-									<option value="12">SXGA 1280×1024</option>
-									<option value="11">HD 1280×720</option>
-									<option value="10">XGA 1024×768</option>
-									<option value="9">SVGA 800×600</option>
-									<option value="8">VGA 640×480</option>
-									<option value="6">CIF 400×296</option>
-									<option value="5" selected>QVGA 320×240</option>
-									<option value="4">HQVGA 240×176</option>
-									<option value="3">QQVGA 160×120</option>
+									class="form-select w-full px-2 py-1.5 bg-surface-raised text-txt-primary border border-default rounded-md text-xs focus:outline-none focus:border-accent-cyan-dim pr-7 transition-all">
+									<option value="13">UXGA 1600x1200</option>
+									<option value="12">SXGA 1280x1024</option>
+									<option value="11">HD 1280x720</option>
+									<option value="10">XGA 1024x768</option>
+									<option value="9">SVGA 800x600</option>
+									<option value="8">VGA 640x480</option>
+									<option value="6">CIF 400x296</option>
+									<option value="5" selected>QVGA 320x240</option>
+									<option value="4">HQVGA 240x176</option>
+									<option value="3">QQVGA 160x120</option>
 								</select>
 							</div>
 						</div>
 					</div>
 
-					<!-- Audio Stream -->
-					<div class="panel">
-						<div class="section-title text-green-400">🎙️ Audio Stream</div>
+					<!-- Audio Stream Panel -->
+					<div class="bg-surface border border-default rounded-[14px] p-5 relative overflow-hidden panel-glow stagger-2">
+						<div class="font-display text-[0.6875rem] font-semibold tracking-[0.1em] uppercase mb-4 pb-2.5 border-b border-subtle flex items-center gap-2 text-accent-emerald">
+							<span class="text-sm">&#x1F399;</span> Audio Stream
+						</div>
 						<div class="flex items-end justify-center h-12 gap-0.5" id="viz"></div>
 						<button
 							id="btnAudio"
-							class="w-full mt-4 px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-						>Start Audio</button>
+							class="w-full mt-4 font-display text-xs font-semibold uppercase tracking-wide px-4 py-2.5 rounded-[10px] bg-gradient-to-br from-accent-emerald-dim to-accent-emerald text-black border border-accent-emerald/30 shadow-[0_2px_12px_rgba(0,255,136,0.15)] hover:shadow-[0_4px_20px_rgba(0,255,136,0.3)] hover:-translate-y-px transition-all disabled:bg-surface-elevated disabled:text-accent-emerald-dim disabled:border-accent-emerald/10 disabled:shadow-none disabled:translate-y-0"
+						>&#x1F50A; Start Audio</button>
 					</div>
 
-					<!-- Debug Controls (collapsible feel via details) -->
-					<details class="panel group" open>
-						<summary class="section-title text-orange-400 cursor-pointer select-none list-none flex items-center justify-between">
-							<span>🔧 Camera Controls (OV5640)</span>
-							<span class="text-[10px] text-gray-500 font-normal normal-case tracking-normal">click to toggle</span>
+					<!-- Camera Controls (collapsible) -->
+					<details class="bg-surface border border-default rounded-[14px] p-5 relative overflow-hidden panel-glow group stagger-3" open>
+						<summary class="font-display text-[0.6875rem] font-semibold tracking-[0.1em] uppercase pb-2.5 border-b border-subtle flex items-center justify-between cursor-pointer select-none list-none text-accent-amber">
+							<span class="flex items-center gap-2">
+								<span class="text-sm">&#x2699;</span> Camera Controls
+							</span>
+							<span class="text-[0.625rem] text-txt-muted font-normal normal-case tracking-normal transition-transform duration-200 group-open:rotate-180">&#x25BC;</span>
 						</summary>
+
 						<div class="grid grid-cols-2 gap-2.5 mt-3">
 							<!-- XCLK -->
-							<div class="bg-white/[0.03] rounded-lg p-2.5">
-								<label class="text-[11px] text-gray-400 block mb-1.5">XCLK Frequency</label>
-								<select data-id="20" class="debug-select w-full px-2 py-1.5 bg-white/10 text-[#dde4f0] border border-white/15 rounded-md text-xs">
+							<div class="bg-surface-raised border border-subtle rounded-md p-2.5">
+								<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-1.5">XCLK Freq</label>
+								<select data-id="20" class="debug-select form-select w-full px-2 py-1.5 bg-surface-elevated text-txt-primary border border-default rounded-md text-xs focus:outline-none pr-7">
 									<option value="0">6 MHz</option>
 									<option value="1">8 MHz</option>
 									<option value="2">12 MHz</option>
@@ -135,199 +171,215 @@
 								</select>
 							</div>
 							<!-- Frame Buffers -->
-							<div class="bg-white/[0.03] rounded-lg p-2.5">
-								<label class="text-[11px] text-gray-400 block mb-1.5">Frame Buffers</label>
-								<select data-id="21" class="debug-select w-full px-2 py-1.5 bg-white/10 text-[#dde4f0] border border-white/15 rounded-md text-xs">
+							<div class="bg-surface-raised border border-subtle rounded-md p-2.5">
+								<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-1.5">Frame Bufs</label>
+								<select data-id="21" class="debug-select form-select w-full px-2 py-1.5 bg-surface-elevated text-txt-primary border border-default rounded-md text-xs focus:outline-none pr-7">
 									<option value="1">1 (no pipeline)</option>
 									<option value="2">2 (double)</option>
 									<option value="3">3 (triple)</option>
 									<option value="4">4 (max)</option>
 								</select>
 							</div>
+
 							<!-- Sliders -->
-							<div class="bg-white/[0.03] rounded-lg p-2.5">
-								<label class="text-[11px] text-gray-400 block mb-1">Brightness (−2~2)</label>
-								<input type="range" min="-2" max="2" data-id="3" class="w-full accent-blue-500" />
-								<div class="text-[11px] text-right text-blue-400 font-mono mt-0.5">0</div>
+							<div class="bg-surface-raised border border-subtle rounded-md p-2.5">
+								<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-1">Brightness (-2~2)</label>
+								<input type="range" min="-2" max="2" data-id="3" />
+								<div class="font-display text-[0.625rem] font-semibold text-accent-cyan text-right mt-0.5">0</div>
 							</div>
-							<div class="bg-white/[0.03] rounded-lg p-2.5">
-								<label class="text-[11px] text-gray-400 block mb-1">Contrast (−2~2)</label>
-								<input type="range" min="-2" max="2" data-id="4" class="w-full accent-blue-500" />
-								<div class="text-[11px] text-right text-blue-400 font-mono mt-0.5">0</div>
+							<div class="bg-surface-raised border border-subtle rounded-md p-2.5">
+								<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-1">Contrast (-2~2)</label>
+								<input type="range" min="-2" max="2" data-id="4" />
+								<div class="font-display text-[0.625rem] font-semibold text-accent-cyan text-right mt-0.5">0</div>
 							</div>
-							<div class="bg-white/[0.03] rounded-lg p-2.5">
-								<label class="text-[11px] text-gray-400 block mb-1">Saturation (−2~2)</label>
-								<input type="range" min="-2" max="2" data-id="5" class="w-full accent-blue-500" />
-								<div class="text-[11px] text-right text-blue-400 font-mono mt-0.5">0</div>
+							<div class="bg-surface-raised border border-subtle rounded-md p-2.5">
+								<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-1">Saturation (-2~2)</label>
+								<input type="range" min="-2" max="2" data-id="5" />
+								<div class="font-display text-[0.625rem] font-semibold text-accent-cyan text-right mt-0.5">0</div>
 							</div>
-							<div class="bg-white/[0.03] rounded-lg p-2.5">
-								<label class="text-[11px] text-gray-400 block mb-1">AE Level (−2~2)</label>
-								<input type="range" min="-2" max="2" data-id="10" class="w-full accent-blue-500" />
-								<div class="text-[11px] text-right text-blue-400 font-mono mt-0.5">0</div>
+							<div class="bg-surface-raised border border-subtle rounded-md p-2.5">
+								<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-1">AE Level (-2~2)</label>
+								<input type="range" min="-2" max="2" data-id="10" />
+								<div class="font-display text-[0.625rem] font-semibold text-accent-cyan text-right mt-0.5">0</div>
 							</div>
-							<div class="bg-white/[0.03] rounded-lg p-2.5 col-span-2">
-								<label class="text-[11px] text-gray-400 block mb-1">Gain Ceiling (0~6)</label>
-								<input type="range" min="0" max="6" data-id="11" class="w-full accent-blue-500" />
-								<div class="text-[11px] text-right text-blue-400 font-mono mt-0.5">0</div>
+							<div class="bg-surface-raised border border-subtle rounded-md p-2.5 col-span-2">
+								<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-1">Gain Ceiling (0~6)</label>
+								<input type="range" min="0" max="6" data-id="11" />
+								<div class="font-display text-[0.625rem] font-semibold text-accent-cyan text-right mt-0.5">0</div>
 							</div>
+
 							<!-- Toggles -->
 							<div class="col-span-2 grid grid-cols-2 gap-2">
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">AWB</span>
-									<input type="checkbox" data-id="6" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">AWB</span>
+									<input type="checkbox" data-id="6" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">AEC</span>
-									<input type="checkbox" data-id="7" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">AEC</span>
+									<input type="checkbox" data-id="7" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">AGC</span>
-									<input type="checkbox" data-id="8" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">AGC</span>
+									<input type="checkbox" data-id="8" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">AEC2</span>
-									<input type="checkbox" data-id="9" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">AEC2</span>
+									<input type="checkbox" data-id="9" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">BPC</span>
-									<input type="checkbox" data-id="12" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">BPC</span>
+									<input type="checkbox" data-id="12" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">WPC</span>
-									<input type="checkbox" data-id="13" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">WPC</span>
+									<input type="checkbox" data-id="13" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">Raw GMA</span>
-									<input type="checkbox" data-id="14" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">Raw GMA</span>
+									<input type="checkbox" data-id="14" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">Lens Corr.</span>
-									<input type="checkbox" data-id="15" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">Lens Corr.</span>
+									<input type="checkbox" data-id="15" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">DCW</span>
-									<input type="checkbox" data-id="18" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">DCW</span>
+									<input type="checkbox" data-id="18" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">H-Mirror</span>
-									<input type="checkbox" data-id="16" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">H-Mirror</span>
+									<input type="checkbox" data-id="16" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">V-Flip</span>
-									<input type="checkbox" data-id="17" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">V-Flip</span>
+									<input type="checkbox" data-id="17" />
 								</label>
-								<label class="bg-white/[0.03] rounded-lg p-2.5 flex items-center justify-between cursor-pointer">
-									<span class="text-[11px] text-gray-400">Color Bar</span>
-									<input type="checkbox" data-id="19" class="w-4 h-4 accent-indigo-500" />
+								<label class="flex items-center justify-between bg-surface-raised border border-subtle rounded-md px-2.5 py-2 cursor-pointer hover:border-strong transition-colors">
+									<span class="font-display text-[0.625rem] font-medium text-txt-secondary tracking-wide uppercase">Color Bar</span>
+									<input type="checkbox" data-id="19" />
 								</label>
 							</div>
 						</div>
 						<button id="btnReset"
-							class="w-full mt-4 px-4 py-2.5 rounded-lg bg-red-600/80 hover:bg-red-500 text-white text-sm font-semibold transition-colors">
-							↺ Reset All to Defaults
+							class="w-full mt-4 font-display text-xs font-semibold uppercase tracking-wide px-4 py-2.5 rounded-[10px] bg-transparent text-accent-red border border-accent-red/20 hover:bg-accent-red/10 hover:border-accent-red/40 transition-all">
+							&#x21BA; Reset All Defaults
 						</button>
 					</details>
 
 				</div>
-				<!-- ════ END LEFT SIDEBAR ════════════════════════════════ -->
+				<!-- ════ END LEFT SIDEBAR ═══════════════════════════ -->
 
 
-				<!-- ════ RIGHT CONTENT AREA ══════════════════════════════ -->
+				<!-- ════ RIGHT CONTENT ══════════════════════════════ -->
 				<div class="flex flex-col gap-5">
 
-					<!-- Empty state hint (shown before first recording) -->
-					<div id="noResultsHint" class="panel flex flex-col items-center justify-center py-20 text-center">
-						<div class="text-5xl mb-4">🎙️</div>
-						<h3 class="text-base font-semibold text-gray-300 mb-2">Ready to process</h3>
-						<p class="text-sm text-gray-500 max-w-xs">Hit <strong class="text-gray-400">Start Recording</strong> on the left, capture audio, then <strong class="text-gray-400">Stop</strong> to run the full AI pipeline.</p>
+					<!-- Empty state -->
+					<div id="noResultsHint" class="bg-surface border border-default rounded-[14px] relative overflow-hidden panel-glow flex flex-col items-center justify-center py-16 text-center stagger-2">
+						<div class="text-4xl mb-3 opacity-60">&#x1F399;</div>
+						<h3 class="font-display text-sm font-semibold text-txt-secondary tracking-wide mb-1.5">Ready to Process</h3>
+						<p class="text-[0.8125rem] text-txt-muted leading-relaxed max-w-[280px]">
+							Hit <strong class="text-txt-secondary">Record</strong> on the left, capture audio, then <strong class="text-txt-secondary">Stop</strong> to run the full AI pipeline.
+						</p>
 					</div>
 
-					<!-- ── RESULTS (hidden until first run) ──────────────── -->
+					<!-- ── RESULTS (hidden until first run) ─────── -->
 					<div id="resultsRow" class="hidden flex flex-col gap-5">
 
-						<!-- ── ROW 1: Voice Recognition ───────────────────── -->
-						<div class="panel">
-							<div class="section-title text-blue-400">🎙️ Voice Recognition</div>
+						<!-- Voice Recognition Panel -->
+						<div class="bg-surface border border-default rounded-[14px] p-5 relative overflow-hidden panel-glow">
+							<div class="font-display text-[0.6875rem] font-semibold tracking-[0.1em] uppercase mb-4 pb-2.5 border-b border-subtle flex items-center gap-2 text-accent-cyan">
+								<span class="text-sm">&#x1F399;</span> Voice Recognition
+							</div>
 
 							<!-- Loading -->
-							<div id="voicePipelineLoading" class="hidden text-center py-12">
-								<div class="inline-block w-10 h-10 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-								<p class="mt-3 text-sm text-gray-400" id="voicePipelineStatus">Processing...</p>
+							<div id="voicePipelineLoading" class="hidden flex flex-col items-center py-10">
+								<div class="w-10 h-10 border-2 border-transparent border-t-accent-cyan border-r-accent-cyan-dim rounded-full animate-spin-custom"></div>
+								<p class="mt-3 font-display text-xs text-txt-muted tracking-wide" id="voicePipelineStatus">Processing...</p>
 							</div>
 
 							<!-- Spectrograms + Transcript -->
 							<div id="spectrogramContainer" class="hidden flex flex-col gap-5">
-								<div class="grid grid-cols-2 gap-5">
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 									<!-- Before -->
 									<div>
 										<div class="flex items-center gap-2 mb-2">
-											<button id="btnPlayOriginal" class="audio-play-btn w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center text-xs transition-colors" title="Play original">
+											<button id="btnPlayOriginal" class="audio-play-btn w-8 h-8 rounded-full bg-accent-violet hover:bg-[#9d71f7] text-white flex items-center justify-center text-xs transition-colors" title="Play original">
 												<span class="play-icon">&#9654;</span>
 											</button>
-											<span class="text-xs font-medium text-gray-300">Before (Noisy)</span>
-											<span id="timeOriginal" class="text-[10px] text-gray-500 font-mono ml-auto">0:00 / 0:00</span>
+											<span class="text-xs font-medium text-txt-secondary">Before (Noisy)</span>
+											<span id="timeOriginal" class="font-display text-[0.625rem] text-txt-muted ml-auto">0:00 / 0:00</span>
 										</div>
-										<div id="spectrogramOriginal" class="bg-black rounded-xl overflow-hidden cursor-pointer"></div>
+										<div id="spectrogramOriginal" class="bg-black rounded-[10px] overflow-hidden border border-subtle cursor-pointer"></div>
 									</div>
 									<!-- After -->
 									<div>
 										<div class="flex items-center gap-2 mb-2">
-											<button id="btnPlayDenoised" class="audio-play-btn w-8 h-8 rounded-full bg-green-600 hover:bg-green-500 text-white flex items-center justify-center text-xs transition-colors" title="Play denoised">
+											<button id="btnPlayDenoised" class="audio-play-btn w-8 h-8 rounded-full bg-accent-emerald-dim hover:bg-accent-emerald text-white hover:text-black flex items-center justify-center text-xs transition-colors" title="Play denoised">
 												<span class="play-icon">&#9654;</span>
 											</button>
-											<span class="text-xs font-medium text-gray-300">After (Denoised)</span>
-											<span id="timeDenoised" class="text-[10px] text-gray-500 font-mono ml-auto">0:00 / 0:00</span>
+											<span class="text-xs font-medium text-txt-secondary">After (Denoised)</span>
+											<span id="timeDenoised" class="font-display text-[0.625rem] text-txt-muted ml-auto">0:00 / 0:00</span>
 										</div>
-										<div id="spectrogramDenoised" class="bg-black rounded-xl overflow-hidden cursor-pointer"></div>
+										<div id="spectrogramDenoised" class="bg-black rounded-[10px] overflow-hidden border border-subtle cursor-pointer"></div>
 									</div>
 								</div>
 
 								<!-- Transcription -->
 								<div>
-									<label class="text-xs font-medium text-gray-400 block mb-2">Transcription (STT)</label>
+									<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase block mb-2">Transcription (STT)</label>
 									<div id="transcriptionOutput"
-										class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm leading-relaxed min-h-[52px]"></div>
+										class="w-full px-4 py-3 bg-surface-raised border border-default rounded-[10px] text-sm leading-relaxed min-h-[48px]"></div>
 								</div>
 							</div>
 						</div>
 
-						<!-- ── ROW 2: Product Rephrase + Classification ────── -->
-						<div class="grid grid-cols-2 gap-5">
+						<!-- Row 2: Rephrase + Classification -->
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
 							<!-- Product Description Rephrase -->
-							<div class="panel flex flex-col gap-4">
-								<div class="section-title text-emerald-400">✨ Product Description Rephrase</div>
+							<div class="bg-surface border border-default rounded-[14px] p-5 relative overflow-hidden panel-glow flex flex-col gap-4">
+								<div class="flex items-center justify-between">
+									<div class="font-display text-[0.6875rem] font-semibold tracking-[0.1em] uppercase flex items-center gap-2 text-accent-emerald">
+										<span class="text-sm">&#x2728;</span> Product Rephrase
+									</div>
+									<div id="rephraseStatus" class="hidden flex items-center gap-2">
+										<div class="w-4 h-4 border-2 border-transparent border-t-accent-emerald border-r-accent-emerald-dim rounded-full animate-spin-custom"></div>
+										<span class="font-display text-[0.625rem] text-txt-muted">Generating...</span>
+									</div>
+								</div>
 
-								<div id="rephraseEmpty" class="flex-1 flex items-center justify-center py-10">
-									<p class="text-sm text-gray-500 text-center">Results will appear<br/>after processing.</p>
+								<div id="rephraseEmpty" class="flex-1 flex items-center justify-center py-8">
+									<p class="text-sm text-txt-muted text-center leading-relaxed">Results will appear<br/>after processing.</p>
 								</div>
 
 								<div id="styledDescriptionContainer" class="hidden flex flex-col gap-3">
 									<div class="flex items-center justify-between">
-										<label class="text-xs font-medium text-gray-400">Original / Style</label>
-										<span id="rephraseStyleBadge" class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-semibold tracking-wide uppercase"></span>
+										<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase">Original / Style</label>
+										<span id="rephraseStyleBadge" class="font-display text-[0.5625rem] font-bold tracking-[0.1em] uppercase px-2 py-0.5 rounded bg-accent-violet/15 text-accent-violet border border-accent-violet/25"></span>
 									</div>
 									<div id="rephraseOriginalOutput"
-										class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm leading-relaxed text-gray-400 min-h-[40px]"></div>
+										class="w-full px-4 py-3 bg-surface-raised border border-default rounded-[10px] text-sm leading-relaxed text-txt-secondary min-h-[40px]"></div>
 
-									<label class="text-xs font-medium text-gray-400 mt-2">Generated Description</label>
+									<label class="font-display text-[0.625rem] font-medium text-txt-muted tracking-widest uppercase mt-1">Generated Description</label>
 									<div id="styledDescriptionOutput"
-										class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm leading-relaxed min-h-[80px]"></div>
+										class="w-full px-4 py-3 bg-surface-raised border border-default rounded-[10px] text-sm leading-relaxed min-h-[72px]"></div>
 								</div>
 							</div>
 
 							<!-- Category Classification -->
-							<div class="panel flex flex-col gap-3">
+							<div class="bg-surface border border-default rounded-[14px] p-5 relative overflow-hidden panel-glow flex flex-col gap-3">
 								<div class="flex items-center justify-between">
-									<div class="section-title text-purple-400 mb-0">🏷️ Category Classification</div>
+									<div class="font-display text-[0.6875rem] font-semibold tracking-[0.1em] uppercase flex items-center gap-2 text-accent-violet">
+										<span class="text-sm">&#x1F3F7;</span> Classification
+									</div>
 									<div id="classifyStatus" class="hidden flex items-center gap-2">
-										<div class="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-										<span class="text-xs text-gray-500">Classifying…</span>
+										<div class="w-4 h-4 border-2 border-transparent border-t-accent-violet border-r-accent-violet-dim rounded-full animate-spin-custom"></div>
+										<span class="font-display text-[0.625rem] text-txt-muted">Classifying...</span>
 									</div>
 								</div>
 
-								<div id="classifyEmpty" class="flex-1 flex items-center justify-center py-10">
-									<p class="text-sm text-gray-500 text-center">Top 10 categories will<br/>appear after processing.</p>
+								<div id="classifyEmpty" class="flex-1 flex items-center justify-center py-8">
+									<p class="text-sm text-txt-muted text-center leading-relaxed">Top 10 categories will<br/>appear after processing.</p>
 								</div>
 
 								<div id="classifySection" class="hidden flex flex-col gap-1.5">
@@ -342,16 +394,16 @@
 					<!-- end #resultsRow -->
 
 				</div>
-				<!-- ════ END RIGHT CONTENT ══════════════════════════════ -->
+				<!-- ════ END RIGHT CONTENT ══════════════════════════ -->
 
 			</div>
 			<!-- end main grid -->
 
 		</div>
-		<!-- end max-w container -->
+		<!-- end app shell -->
 
 		<!-- Hidden canvas for video recording -->
-		<canvas id="recordCanvas" class="hidden"></canvas>
+		<canvas id="recordCanvas"></canvas>
 
 		<script type="module" src="js/main.js"></script>
 	</body>

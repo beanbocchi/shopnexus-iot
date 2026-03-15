@@ -1,18 +1,202 @@
-body {
-	font-family: "Inter", sans-serif;
+/* ================================================================
+   ShopNexus IoT — Command Center Design System
+   Tailwind CSS handles 95% of styling. This file covers:
+   - Font imports
+   - Custom properties (used by Tailwind arbitrary values)
+   - Pseudo-element backgrounds Tailwind can't do
+   - Custom range/checkbox overrides
+   - Keyframe animations
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* --- Tailwind Config Overrides --- */
+:root {
+	--cyan: #00d4ff;
+	--cyan-dim: #0098b8;
+	--amber: #ffb800;
+	--emerald: #00ff88;
+	--emerald-dim: #00b860;
+	--red: #ff3b5c;
+	--violet: #8b5cf6;
+	--violet-dim: #6d3fcc;
 }
-/* Custom styles for range inputs and visualizer bars */
-.bar {
-	transition: height 0.05s;
+
+/* --- Dot grid background (can't do with Tailwind) --- */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	background-image: radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px);
+	background-size: 24px 24px;
+	pointer-events: none;
+	z-index: 0;
 }
-#recordCanvas {
-	display: none;
+
+/* Top ambient glow */
+body::after {
+	content: '';
+	position: fixed;
+	top: -200px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 800px;
+	height: 500px;
+	background: radial-gradient(ellipse, rgba(0, 212, 255, 0.06) 0%, transparent 70%);
+	pointer-events: none;
+	z-index: 0;
 }
-.audio-play-btn {
-	border: none;
-	line-height: 1;
+
+/* --- Panel top-edge glow line --- */
+.panel-glow::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.15), transparent);
+}
+
+/* --- Custom range input --- */
+input[type="range"] {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	height: 4px;
+	background: #161d30;
+	border-radius: 2px;
+	outline: none;
+	cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--cyan);
+	border: 2px solid #0c1020;
+	box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
+	cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+	box-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+}
+input[type="range"]::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--cyan);
+	border: 2px solid #0c1020;
+	box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
+	cursor: pointer;
+}
+
+/* --- Custom toggle checkbox --- */
+input[type="checkbox"] {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 32px;
+	height: 16px;
+	background: #161d30;
+	border-radius: 8px;
+	border: 1px solid rgba(255,255,255,0.14);
+	cursor: pointer;
+	position: relative;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 	flex-shrink: 0;
 }
-.audio-play-btn .play-icon {
-	pointer-events: none;
+input[type="checkbox"]::before {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #556078;
+	transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+input[type="checkbox"]:checked {
+	background: rgba(0, 212, 255, 0.2);
+	border-color: var(--cyan-dim);
+}
+input[type="checkbox"]:checked::before {
+	transform: translateX(16px);
+	background: var(--cyan);
+	box-shadow: 0 0 6px rgba(0, 212, 255, 0.4);
+}
+
+/* --- Keyframes --- */
+@keyframes pulse-glow {
+	0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--emerald); }
+	50% { opacity: 0.4; box-shadow: 0 0 8px var(--emerald); }
+}
+
+@keyframes rec-blink {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0; }
+}
+
+@keyframes spin-custom {
+	to { transform: rotate(360deg); }
+}
+
+@keyframes slide-in {
+	from { opacity: 0; transform: translateX(-8px); }
+	to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-up {
+	from { opacity: 0; transform: translateY(12px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+/* Utility classes for animations */
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-rec-blink { animation: rec-blink 1s step-end infinite; }
+.animate-spin-custom { animation: spin-custom 0.8s linear infinite; }
+
+.stagger-1 { animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+.stagger-2 { animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
+.stagger-3 { animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.19s both; }
+.stagger-4 { animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+
+/* Classify row stagger */
+.classify-row { animation: slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.classify-row:nth-child(1) { animation-delay: 0ms; }
+.classify-row:nth-child(2) { animation-delay: 40ms; }
+.classify-row:nth-child(3) { animation-delay: 40ms; }
+.classify-row:nth-child(4) { animation-delay: 80ms; }
+.classify-row:nth-child(5) { animation-delay: 120ms; }
+.classify-row:nth-child(6) { animation-delay: 160ms; }
+.classify-row:nth-child(7) { animation-delay: 200ms; }
+.classify-row:nth-child(8) { animation-delay: 240ms; }
+.classify-row:nth-child(9) { animation-delay: 280ms; }
+.classify-row:nth-child(10) { animation-delay: 320ms; }
+
+/* Audio visualizer bars */
+.bar {
+	transition: height 0.06s linear;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* Hidden canvas */
+#recordCanvas { display: none; }
+
+/* Play button resets */
+.audio-play-btn { border: none; line-height: 1; flex-shrink: 0; }
+.audio-play-btn .play-icon { pointer-events: none; }
+
+/* Form select custom arrow */
+.form-select {
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23556078' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 10px center;
 }

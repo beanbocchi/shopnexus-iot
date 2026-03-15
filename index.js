@@ -240,31 +240,35 @@ app.post('/api/process-voice', upload.single('file'), async (req, res) => {
         const sttData = await sttRes.json();
         const transcription = sttData.data;
 
-        // Step 3: Generate styled description
-        const style = req.body?.style || req.query?.style;
-        let styledDescription = null;
-
-        if (style) {
-            const genRes = await fetch(`${process.env.VOICE_REPHRAZE_BASE_URL}/gen`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ style, product_description: transcription }),
-            });
-
-            if (genRes.ok) {
-                styledDescription = await genRes.json();
-            }
-        }
-
         res.json({
             originalAudioUrl: `/api/audio/${id}-original.wav`,
             denoisedAudioUrl: `/api/audio/${id}-denoised.wav`,
             transcription,
-            styledDescription,
         });
     } catch (err) {
         console.error('Voice pipeline error:', err);
         res.status(500).json({ error: err.message });
+    }
+});
+app.post('/api/gen-description', async (req, res) => {
+    try {
+        const { style, product_description } = req.body;
+        const genRes = await fetch(`${process.env.VOICE_REPHRAZE_BASE_URL}/gen`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ style, product_description }),
+        });
+
+        if (!genRes.ok) {
+            const err = await genRes.text();
+            return res.status(genRes.status).json({ error: err });
+        }
+
+        const data = await genRes.json();
+        res.json(data);
+    } catch (err) {
+        console.error('Gen description proxy error:', err);
+        res.status(502).json({ error: 'Failed to reach gen service' });
     }
 });
 

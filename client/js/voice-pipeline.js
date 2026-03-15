@@ -3,6 +3,7 @@ import {
 	resultsRow,
 	noResultsHint,
 	rephraseEmpty,
+	rephraseStatus,
 	voicePipelineLoading,
 	voicePipelineStatus,
 	spectrogramContainer,
@@ -68,12 +69,9 @@ export async function processVoice(wavBlob) {
 
 	try {
 		const formData = new FormData()
-		if (style) {
-			formData.append("style", style)
-		}
 		formData.append("file", wavBlob, "recording.wav")
 
-		voicePipelineStatus.textContent = "Processing pipeline (denoise → STT → gen → classify)..."
+		voicePipelineStatus.textContent = "Processing audio (denoise → STT)..."
 
 		const res = await fetch("/api/process-voice", {
 			method: "POST",
@@ -97,26 +95,47 @@ export async function processVoice(wavBlob) {
 		// Display transcription
 		transcriptionOutput.textContent = result.transcription
 
-		// Display styled description (rephrase panel)
-		if (result.styledDescription) {
+		// Generate styled description (rephrase panel)
+		if (result.transcription && style) {
 			rephraseEmpty.classList.add("hidden")
 			styledDescriptionContainer.classList.remove("hidden")
-
-			const sd = result.styledDescription
 			
-			rephraseStyleBadge.textContent = sd.style || styleSelect.value || "default"
-			rephraseOriginalOutput.textContent = sd.original_description || result.transcription || ""
+			// Show spinner, clear old data
+			rephraseStatus.classList.remove("hidden")
+			rephraseOriginalOutput.textContent = result.transcription
+			rephraseStyleBadge.textContent = style
+			styledDescriptionOutput.innerHTML = ""
 
-			if (sd.generated_description) {
-				styledDescriptionOutput.textContent = sd.generated_description
-			} else {
-				styledDescriptionOutput.innerHTML =
-					'<span class="text-amber-400 text-xs">⚠️ Generation returned empty — the LLM may have failed silently. Check the gen service logs.</span>'
-			}
+			// Fire-and-forget subtask
+			fetch("/api/gen-description", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ style, product_description: result.transcription })
+			})
+				.then((res) => {
+					if (!res.ok) throw new Error(`HTTP ${res.status}`)
+					return res.json()
+				})
+				.then((sd) => {
+					rephraseStatus.classList.add("hidden")
+					rephraseStyleBadge.textContent = sd.style || style
+					rephraseOriginalOutput.textContent = sd.original_description || result.transcription
+					
+					if (sd.generated_description) {
+						styledDescriptionOutput.textContent = sd.generated_description
+					} else {
+						styledDescriptionOutput.innerHTML =
+							'<span class="text-amber-400 text-xs">⚠️ Generation returned empty.</span>'
+					}
+				})
+				.catch((err) => {
+					rephraseStatus.classList.add("hidden")
+					styledDescriptionOutput.innerHTML = `<p class="text-red-400 text-xs">Error: ${err.message}</p>`
+				})
 		} else {
 			styledDescriptionContainer.classList.add("hidden")
+			if (!result.transcription) rephraseEmpty.classList.remove("hidden")
 		}
-
 
 		// Classify transcription
 		if (result.transcription) {
@@ -124,14 +143,17 @@ export async function processVoice(wavBlob) {
 			classifySection.classList.remove("hidden")
 			classifyResults.innerHTML = ""
 			classifyStatus.classList.remove("hidden")
-			try {
-				const classifyData = await classify(result.transcription, 10)
-				classifyStatus.classList.add("hidden")
-				renderClassification(classifyResults, classifyData)
-			} catch (err) {
-				classifyStatus.classList.add("hidden")
-				classifyResults.innerHTML = `<p class="text-red-400 text-xs">Error: ${err.message}</p>`
-			}
+			
+			// Fire-and-forget subtask
+			classify(result.transcription, 10)
+				.then((classifyData) => {
+					classifyStatus.classList.add("hidden")
+					renderClassification(classifyResults, classifyData)
+				})
+				.catch((err) => {
+					classifyStatus.classList.add("hidden")
+					classifyResults.innerHTML = `<p class="text-red-400 text-xs">Error: ${err.message}</p>`
+				})
 		}
 	} catch (err) {
 		console.error("Voice pipeline error:", err)
