@@ -268,6 +268,25 @@ app.post('/api/process-voice', upload.single('file'), async (req, res) => {
     }
 });
 
+app.post('/api/classify', async (req, res) => {
+    try {
+        const response = await fetch('http://localhost:5002/classify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body),
+        });
+        if (!response.ok) {
+            const err = await response.text();
+            return res.status(response.status).json({ error: err });
+        }
+        const data = await response.json();
+        res.json(data);
+    } catch (err) {
+        console.error('Classify proxy error:', err);
+        res.status(502).json({ error: 'Failed to reach classify service' });
+    }
+});
+
 server.listen(3000, '0.0.0.0', () => {
     console.log('Web Server running on http://0.0.0.0:3000');
 });

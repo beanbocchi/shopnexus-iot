@@ -13,7 +13,12 @@ import {
 	btnPlayDenoised,
 	timeOriginal,
 	timeDenoised,
+	classifySection,
+	classifyResults,
+	classifyStatus,
 } from "./elements.js"
+
+import { classify, renderClassification } from "./classify.js"
 
 import WaveSurfer from "https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js"
 import Spectrogram from "https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/plugins/spectrogram.esm.js"
@@ -84,6 +89,20 @@ export async function processVoice(wavBlob) {
 			styledDescriptionOutput.textContent = result.styledDescription.generated_description
 		} else {
 			styledDescriptionContainer.classList.add("hidden")
+		}
+
+		// Classify transcription
+		if (result.transcription) {
+			classifySection.classList.remove("hidden")
+			classifyResults.innerHTML = ""
+			classifyStatus.classList.remove("hidden")
+			try {
+				const classifyData = await classify(result.transcription, 5)
+				classifyStatus.classList.add("hidden")
+				renderClassification(classifyResults, classifyData)
+			} catch (err) {
+				classifyStatus.textContent = `Classification error: ${err.message}`
+			}
 		}
 	} catch (err) {
 		console.error("Voice pipeline error:", err)

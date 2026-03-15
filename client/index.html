@@ -188,7 +188,23 @@
 					</div>
 				</div>
 
-				<!-- Debug Controls -->
+			<!-- Category Classification Results -->
+			<div id="classifySection" class="hidden bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5">
+				<h2 class="text-[15px] mb-3 text-purple-400 flex items-center gap-2">
+					🏷️ Category Classification
+				</h2>
+
+				<!-- Spinner while classifying -->
+				<div id="classifyStatus" class="hidden text-center py-4">
+					<div class="inline-block w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+					<p class="mt-2 text-xs text-gray-400">Classifying…</p>
+				</div>
+
+				<!-- Results rendered here by classify.js -->
+				<div id="classifyResults"></div>
+			</div>
+
+			<!-- Debug Controls -->
 				<div
 					class="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5 col-span-2"
 				>
